@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+    <!-- STORE MANAGER -->
+    <extension point="org.datanucleus.store_manager">
+        <store-manager class-name="org.datanucleus.store.odf.ODFStoreManager" key="odf" url-key="odf"/>
+    </extension>
+
+    <!-- QUERY LANGUAGES -->
+    <extension point="org.datanucleus.store_query_query">
+        <query class-name="org.datanucleus.store.odf.query.JDOQLQuery" datastore="odf" name="JDOQL"/>
+        <query class-name="org.datanucleus.store.odf.query.JPQLQuery" datastore="odf" name="JPQL"/>
+    </extension>
+
+    <!-- CONNECTION FACTORY -->
+    <extension point="org.datanucleus.store_connectionfactory">
+        <connectionfactory name="odf" class-name="org.datanucleus.store.odf.ConnectionFactoryImpl" 
+            transactional="true" datastore="odf"/>
+    </extension>
+
+    <!-- VALUE GENERATORS -->
+    <extension point="org.datanucleus.store_valuegenerator">
+        <valuegenerator name="increment" class-name="org.datanucleus.store.odf.valuegenerator.IncrementGenerator" datastore="odf"/>
+    </extension>
+</plugin>
