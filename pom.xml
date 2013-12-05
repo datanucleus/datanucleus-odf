@@ -27,9 +27,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:svn:svn://andy_jefferson@svn.code.sf.net/p/datanucleus/code/platform/store.odf/trunk</connection>
-        <developerConnection>scm:svn:svn+ssh://andy_jefferson@svn.code.sf.net/p/datanucleus/code/platform/store.odf/trunk</developerConnection>
-        <url>http://svn.code.sf.net/p/datanucleus/code/platform/store.odf/trunk</url>
+        <connection>scm:git:git://github.com/datanucleus/datanucleus-odf.git</connection>
+        <url>scm:git:git://github.com/datanucleus/datanucleus-odf.git</url>
+        <developerConnection>scm:git:git://github.com/datanucleus/datanucleus-odf.git</developerConnection>
     </scm>
 
     <developers>
