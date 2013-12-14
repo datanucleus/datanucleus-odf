@@ -48,7 +48,7 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>org.datanucleus.api.jdo;singleton:=true</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>org.datanucleus.store.odf;singleton:=true</Bundle-SymbolicName>
                         <Import-Package>
                             org.odftoolkit*;version="${odfdom.version}",
                             org.datanucleus*;version="${dn.core.version}",
