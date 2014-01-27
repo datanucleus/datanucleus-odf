@@ -529,11 +529,11 @@ public class FetchFieldManager extends AbstractFieldManager
 
                     if (components != null)
                     {
+                        AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(
+                            ec.getClassLoaderResolver(), ec.getMetaDataManager());
                         for (int i=0;i<components.length;i++)
                         {
                             // TODO handle Collection<interface>
-                            AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(
-                                ec.getClassLoaderResolver(), ec.getMetaDataManager());
                             Object element = null;
                             if (elementCmd.usesSingleFieldIdentityClass() && components[i].indexOf(':') > 0)
                             {
@@ -586,7 +586,7 @@ public class FetchFieldManager extends AbstractFieldManager
                             if (keyCmd != null)
                             {
                                 // TODO handle Map<interface, ?>
-                                if (keyCmd.usesSingleFieldIdentityClass() && components[i].indexOf(':') > 0)
+                                if (keyCmd.usesSingleFieldIdentityClass() && keyStr.indexOf(':') > 0)
                                 {
                                     // Uses persistent identity
                                     key = IdentityUtils.getObjectFromPersistableIdentity(keyStr, keyCmd, ec);
@@ -620,7 +620,7 @@ public class FetchFieldManager extends AbstractFieldManager
                             if (valCmd != null)
                             {
                                 // TODO handle Map<?, interface>
-                                if (valCmd.usesSingleFieldIdentityClass() && components[i].indexOf(':') > 0)
+                                if (valCmd.usesSingleFieldIdentityClass() && valStr.indexOf(':') > 0)
                                 {
                                     // Uses persistent identity
                                     val = IdentityUtils.getObjectFromPersistableIdentity(valStr, valCmd, ec);
