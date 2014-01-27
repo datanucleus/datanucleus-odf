@@ -664,12 +664,12 @@ public class FetchFieldManager extends AbstractFieldManager
                     Object array = null;
                     if (components != null)
                     {
+                        AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(
+                            ec.getClassLoaderResolver(), ec.getMetaDataManager());
                         array = Array.newInstance(mmd.getType().getComponentType(), components.length);
                         for (int i=0;i<components.length;i++)
                         {
                             // TODO handle interface[]
-                            AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(
-                                ec.getClassLoaderResolver(), ec.getMetaDataManager());
                             Object element = null;
                             if (elementCmd.usesSingleFieldIdentityClass() && components[i].indexOf(':') > 0)
                             {
