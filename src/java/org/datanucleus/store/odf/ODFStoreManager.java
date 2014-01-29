@@ -26,7 +26,7 @@ import java.util.Set;
 
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.ExecutionContext;
-import org.datanucleus.NucleusContext;
+import org.datanucleus.PersistenceNucleusContext;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.store.AbstractStoreManager;
 import org.datanucleus.store.NucleusConnection;
@@ -41,7 +41,7 @@ import org.odftoolkit.odfdom.doc.table.OdfTable;
  */
 public class ODFStoreManager extends AbstractStoreManager implements SchemaAwareStoreManager
 {
-    public ODFStoreManager(ClassLoaderResolver clr, NucleusContext ctx, Map<String, Object> props)
+    public ODFStoreManager(ClassLoaderResolver clr, PersistenceNucleusContext ctx, Map<String, Object> props)
     {
         super("odf", clr, ctx, props);
 
