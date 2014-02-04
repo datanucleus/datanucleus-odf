@@ -49,15 +49,12 @@ import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
  */
 public class StoreFieldManager extends AbstractStoreFieldManager
 {
-    ExecutionContext ec;
-
     /** Row being inserted/updated. */
     protected final OdfTableRow row;
 
     public StoreFieldManager(ObjectProvider op, OdfTableRow row, boolean insert)
     {
         super(op, insert);
-        this.ec = op.getExecutionContext();
         this.row = row;
     }
 
@@ -187,6 +184,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
 
         // Special cases
         RelationType relationType = mmd.getRelationType(clr);
+        // TODO Make use of isMemberEmbedded
         if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
         {
             // Persistable object embedded into this table

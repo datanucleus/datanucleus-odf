@@ -36,7 +36,7 @@ import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.types.converters.TypeConverter;
-import org.datanucleus.store.fieldmanager.AbstractFieldManager;
+import org.datanucleus.store.fieldmanager.AbstractFetchFieldManager;
 import org.datanucleus.store.odf.ODFUtils;
 import org.datanucleus.store.types.SCOUtils;
 import org.datanucleus.store.types.TypeManager;
@@ -48,26 +48,19 @@ import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 /**
  * FieldManager for the fetch of fields from ODF.
  */
-public class FetchFieldManager extends AbstractFieldManager
+public class FetchFieldManager extends AbstractFetchFieldManager
 {
-    protected final ObjectProvider op;
-    ExecutionContext ec;
-    AbstractClassMetaData cmd;
     protected final OdfTableRow row;
 
     public FetchFieldManager(ObjectProvider op, OdfTableRow row)
     {
-        this.op = op;
-        this.ec = op.getExecutionContext();
-        this.cmd = op.getClassMetaData();
+        super(op);
         this.row = row;
     }
 
     public FetchFieldManager(ExecutionContext ec, AbstractClassMetaData cmd, OdfTableRow row)
     {
-        this.op = null;
-        this.ec = ec;
-        this.cmd = cmd;
+        super(ec, cmd);
         this.row = row;
     }
 
