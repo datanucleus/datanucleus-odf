@@ -212,9 +212,9 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         // Special cases
         if (relationType != RelationType.NONE)
         {
-            boolean embedded = isMemberEmbedded(mmd, relationType, null);
-            if (embedded)
+            if (MetaDataUtils.getInstance().isMemberEmbedded(ec.getMetaDataManager(), clr, mmd, relationType, null))
             {
+                // Embedded field
                 if (RelationType.isRelationSingleValued(relationType))
                 {
                     // Persistable object embedded into table of this object
@@ -229,10 +229,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 }
                 else if (RelationType.isRelationMultiValued(relationType))
                 {
-                    if (embedded)
-                    {
-                        throw new NucleusUserException("Dont support embedded multi-valued field at " + mmd.getFullFieldName() + " with ODF");
-                    }
+                    throw new NucleusUserException("Dont support embedded multi-valued field at " + mmd.getFullFieldName() + " with ODF");
                 }
             }
         }
