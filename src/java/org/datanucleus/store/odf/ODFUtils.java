@@ -42,6 +42,7 @@ import org.datanucleus.metadata.EmbeddedMetaData;
 import org.datanucleus.metadata.IdentityMetaData;
 import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.MetaDataManager;
+import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.metadata.VersionMetaData;
 import org.datanucleus.state.ObjectProvider;
@@ -52,7 +53,6 @@ import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.schema.naming.ColumnType;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
-
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.incubator.doc.office.OdfOfficeAutomaticStyles;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
@@ -708,7 +708,7 @@ public class ODFUtils
         {
             AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(i);
             RelationType relationType = mmd.getRelationType(clr);
-            if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
+            if (RelationType.isRelationSingleValued(relationType) && MetaDataUtils.getInstance().isMemberEmbedded(mmgr, clr, mmd, relationType, null))
             {
                 AbstractClassMetaData relCmd = mmgr.getMetaDataForClass(mmd.getType(), clr);
                 getColumnInformationForEmbeddedClass(colNameByPosition, relCmd, mmd, clr, mmgr, storeMgr);
@@ -780,7 +780,7 @@ public class ODFUtils
             else
             {
                 RelationType relationType = mmd.getRelationType(clr);
-                if (RelationType.isRelationSingleValued(relationType))
+                if (RelationType.isRelationSingleValued(relationType)) // TODO Use MetaDataUtils.isEmbedded(...)?
                 {
                     AbstractClassMetaData relCmd = mmgr.getMetaDataForClass(emb_mmd[i].getType(), clr);
                     getColumnInformationForEmbeddedClass(colNameByPosition, relCmd, emb_mmd[i], clr, mmgr, storeMgr);
