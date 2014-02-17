@@ -105,7 +105,7 @@ public class IncrementGenerator extends AbstractDatastoreGenerator implements Va
             OdfTableRow row = null;
             if (table == null)
             {
-                if (!storeMgr.isAutoCreateTables())
+                if (!storeMgr.getSchemaHandler().isAutoCreateTables())
                 {
                     throw new NucleusUserException(LOCALISER.msg("040011", worksheetName));
                 }

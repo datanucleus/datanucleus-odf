@@ -19,7 +19,6 @@ package org.datanucleus.store.odf;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -27,14 +26,10 @@ import java.util.Set;
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.PersistenceNucleusContext;
-import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.store.AbstractStoreManager;
 import org.datanucleus.store.NucleusConnection;
-import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.schema.SchemaAwareStoreManager;
 import org.datanucleus.util.ClassUtils;
-import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
-import org.odftoolkit.odfdom.doc.table.OdfTable;
 
 /**
  * StoreManager for OpenOffice (spreadsheet) ODF docs.
@@ -48,6 +43,7 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
         // Check if ODFDOM JAR is in CLASSPATH
         ClassUtils.assertClassForJarExistsInClasspath(clr, "org.odftoolkit.odfdom.doc.OdfDocument", "odfdom.jar");
 
+        schemaHandler = new ODFSchemaHandler(this);
         persistenceHandler = new ODFPersistenceHandler(this);
 
         logConfiguration();
@@ -78,80 +74,26 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
 
     public void createSchema(String schemaName, Properties props)
     {
-        throw new UnsupportedOperationException("Dont support the creation of a schema with ODF since there is no equivalent concept");
+        schemaHandler.createSchema(schemaName, props, null);
     }
 
     public void deleteSchema(String schemaName, Properties props)
     {
-        throw new UnsupportedOperationException("Dont support the deletion of a schema with ODF since there is no equivalent concept");
+        schemaHandler.deleteSchema(schemaName, props, null);
     }
 
     public void createSchemaForClasses(Set<String> classNames, Properties props)
     {
-        ManagedConnection mconn = getConnection(-1);
-        try
-        {
-            OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
-
-            Iterator<String> classIter = classNames.iterator();
-            ClassLoaderResolver clr = nucleusContext.getClassLoaderResolver(null);
-            while (classIter.hasNext())
-            {
-                String className = classIter.next();
-                AbstractClassMetaData cmd = getMetaDataManager().getMetaDataForClass(className, clr);
-                if (cmd != null)
-                {
-                    // Find/Create the sheet (table) appropriate for storing objects of this class
-                    String sheetName = getNamingFactory().getTableName(cmd);
-                    OdfTable table = spreadsheetDoc.getTableByName(sheetName);
-                    if (table == null)
-                    {
-                        // Table for this class doesn't exist yet so create
-                        table = ODFUtils.addTableForClass(spreadsheetDoc, cmd, sheetName, this);
-                    }
-                }
-            }
-        }
-        finally
-        {
-            mconn.release();
-        }
+        schemaHandler.createSchemaForClasses(classNames, props, null);
     }
 
     public void deleteSchemaForClasses(Set<String> classNames, Properties props)
     {
-        ManagedConnection mconn = getConnection(-1);
-        try
-        {
-            OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
-
-            Iterator<String> classIter = classNames.iterator();
-            ClassLoaderResolver clr = nucleusContext.getClassLoaderResolver(null);
-            while (classIter.hasNext())
-            {
-                String className = classIter.next();
-                AbstractClassMetaData cmd = getMetaDataManager().getMetaDataForClass(className, clr);
-                if (cmd != null)
-                {
-                    // Find/Delete the sheet (table) appropriate for storing objects of this class
-                    String sheetName = getNamingFactory().getTableName(cmd);
-                    OdfTable table = spreadsheetDoc.getTableByName(sheetName);
-                    if (table != null)
-                    {
-                        table.remove();
-                    }
-                }
-            }
-        }
-        finally
-        {
-            mconn.release();
-        }
+        schemaHandler.deleteSchemaForClasses(classNames, props, null);
     }
 
     public void validateSchemaForClasses(Set<String> classNames, Properties props)
     {
-        // TODO Auto-generated method stub
-        
+        schemaHandler.validateSchema(classNames, props, null);
     }
 }
