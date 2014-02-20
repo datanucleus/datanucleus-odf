@@ -199,7 +199,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 }
                                 else
                                 {
-                                    idKey = new Long(idCell.getDoubleValue().longValue());
+                                    idKey = Long.valueOf(idCell.getDoubleValue().longValue());
                                 }
                                 OID oid = OIDFactory.getInstance(ec.getNucleusContext(), cmd.getFullClassName(), idKey);
                                 return ec.findObject(oid, new FieldValues()

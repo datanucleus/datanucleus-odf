@@ -112,7 +112,7 @@ public class JPQLQuery extends AbstractJPQLQuery
             if (type == BULK_DELETE)
             {
                 ec.deleteObjects(results.toArray());
-                return new Long(results.size());
+                return Long.valueOf(results.size());
             }
             else if (type == BULK_UPDATE)
             {

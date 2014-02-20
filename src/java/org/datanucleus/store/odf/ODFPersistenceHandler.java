@@ -157,7 +157,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 if (vermd.getVersionStrategy() == VersionStrategy.VERSION_NUMBER)
                 {
                     long versionNumber = 1;
-                    op.setTransactionalVersion(new Long(versionNumber));
+                    op.setTransactionalVersion(Long.valueOf(versionNumber));
                     if (NucleusLogger.DATASTORE.isDebugEnabled())
                     {
                         NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
@@ -241,14 +241,14 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                     if (currentVersion instanceof Integer)
                     {
                         // Cater for Integer-based versions TODO Generalise this
-                        currentVersion = new Long(((Integer)currentVersion).longValue());
+                        currentVersion = Long.valueOf(((Integer)currentVersion).longValue());
                     }
 
                     nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), currentVersion);
                     if (verMmd.getType() == Integer.class || verMmd.getType() == int.class)
                     {
                         // Cater for Integer-based versions TODO Generalise this
-                        nextVersion = new Integer(((Long)nextVersion).intValue());
+                        nextVersion = Integer.valueOf(((Long)nextVersion).intValue());
                     }
                     op.replaceField(verMmd.getAbsoluteFieldNumber(), nextVersion);
 

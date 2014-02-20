@@ -309,7 +309,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 {
                     return null;
                 }
-                value = new Float(cell.getDoubleValue().floatValue());
+                value = Float.valueOf(cell.getDoubleValue().floatValue());
             }
             else if (type == Integer.class)
             {
@@ -317,7 +317,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 {
                     return null;
                 }
-                value = new Integer(cell.getDoubleValue().intValue());
+                value = Integer.valueOf(cell.getDoubleValue().intValue());
             }
             else if (type == Long.class)
             {
@@ -325,7 +325,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 {
                     return null;
                 }
-                value = new Long(cell.getDoubleValue().longValue());
+                value = Long.valueOf(cell.getDoubleValue().longValue());
             }
             else if (type == Short.class)
             {
@@ -333,7 +333,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 {
                     return null;
                 }
-                value = new Short(cell.getDoubleValue().shortValue());
+                value = Short.valueOf(cell.getDoubleValue().shortValue());
             }
             else if (type == Calendar.class)
             {

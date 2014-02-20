@@ -581,7 +581,7 @@ public class ODFUtils
                     }
                     else
                     {
-                        idKey = new Long(idCell.getDoubleValue().longValue());
+                        idKey = Long.valueOf(idCell.getDoubleValue().longValue());
                     }
                     OID oid = OIDFactory.getInstance(ec.getNucleusContext(), acmd.getFullClassName(), idKey);
                     results.add(ec.findObject(oid, new FieldValues()
