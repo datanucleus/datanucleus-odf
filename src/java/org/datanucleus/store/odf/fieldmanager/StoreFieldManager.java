@@ -344,7 +344,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             else if (value instanceof Float)
             {
                 cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                cell.setDoubleValue((Double)value);
+                cell.setDoubleValue(new Double((Float)value));
                 return;
             }
             else if (value instanceof Integer)
