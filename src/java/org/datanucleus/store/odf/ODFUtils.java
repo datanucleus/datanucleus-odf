@@ -339,7 +339,7 @@ public class ODFUtils
                     String colName = colmds[0].getName();
                     try
                     {
-                        return new Integer(colName).intValue();
+                        return Integer.valueOf(colName).intValue();
                     }
                     catch (NumberFormatException nfe)
                     {
