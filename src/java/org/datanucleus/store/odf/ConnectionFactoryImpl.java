@@ -76,7 +76,7 @@ public class ConnectionFactoryImpl extends AbstractConnectionFactory
         filename = str.substring("file:".length()); // Omit "file:"
     }
 
-    public ManagedConnection createManagedConnection(ExecutionContext ec, Map txnOptionsIgnored)
+    public ManagedConnection createManagedConnection(ExecutionContext ec, Map options)
     {
         return new ManagedConnectionImpl();
     }
