@@ -370,7 +370,7 @@ public class ODFUtils
                         String colName = imd.getColumnMetaData().getName();
                         try
                         {
-                            return new Integer(colName).intValue();
+                            return Integer.valueOf(colName).intValue();
                         }
                         catch (NumberFormatException nfe)
                         {
