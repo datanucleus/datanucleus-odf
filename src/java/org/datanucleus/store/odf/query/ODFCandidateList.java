@@ -33,6 +33,7 @@ import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.connection.ManagedConnection;
+import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.odf.ODFUtils;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.query.AbstractCandidateLazyLoadList;
@@ -165,22 +166,19 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                         if (current == index)
                         {
                             // This row equates to the required index
-                            final AbstractClassMetaData acmd = cmd;
+                            final FieldManager fm = new FetchFieldManager(ec, cmd, row);
                             if (cmd.getIdentityType() == IdentityType.APPLICATION)
                             {
-                                Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false,
-                                    new FetchFieldManager(ec, acmd, row));
+                                Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, cmd, null, false, fm);
                                 return ec.findObject(id, new FieldValues()
                                 {
-                                    public void fetchFields(ObjectProvider sm)
+                                    public void fetchFields(ObjectProvider op)
                                     {
-                                        sm.replaceFields(acmd.getAllMemberPositions(), 
-                                            new FetchFieldManager(sm, row));
+                                        op.replaceFields(cmd.getAllMemberPositions(), fm);
                                     }
-                                    public void fetchNonLoadedFields(ObjectProvider sm)
+                                    public void fetchNonLoadedFields(ObjectProvider op)
                                     {
-                                        sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), 
-                                            new FetchFieldManager(sm, row));
+                                        op.replaceNonLoadedFields(cmd.getAllMemberPositions(), fm);
                                     }
                                     public FetchPlan getFetchPlanForLoading()
                                     {
@@ -204,15 +202,13 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 OID oid = OIDFactory.getInstance(ec.getNucleusContext(), cmd.getFullClassName(), idKey);
                                 return ec.findObject(oid, new FieldValues()
                                 {
-                                    public void fetchFields(ObjectProvider sm)
+                                    public void fetchFields(ObjectProvider op)
                                     {
-                                        sm.replaceFields(acmd.getAllMemberPositions(), 
-                                            new FetchFieldManager(sm, row));
+                                        op.replaceFields(cmd.getAllMemberPositions(), fm);
                                     }
-                                    public void fetchNonLoadedFields(ObjectProvider sm)
+                                    public void fetchNonLoadedFields(ObjectProvider op)
                                     {
-                                        sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), 
-                                            new FetchFieldManager(sm, row));
+                                        op.replaceNonLoadedFields(cmd.getAllMemberPositions(), fm);
                                     }
                                     public FetchPlan getFetchPlanForLoading()
                                     {
@@ -222,18 +218,16 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                             }
                             else
                             {
-                                Object id = new SCOID(acmd.getFullClassName());
+                                Object id = new SCOID(cmd.getFullClassName());
                                 return ec.findObject(id, new FieldValues()
                                 {
-                                    public void fetchFields(ObjectProvider sm)
+                                    public void fetchFields(ObjectProvider op)
                                     {
-                                        sm.replaceFields(acmd.getAllMemberPositions(), 
-                                            new FetchFieldManager(sm, row));
+                                        op.replaceFields(cmd.getAllMemberPositions(), fm);
                                     }
-                                    public void fetchNonLoadedFields(ObjectProvider sm)
+                                    public void fetchNonLoadedFields(ObjectProvider op)
                                     {
-                                        sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), 
-                                            new FetchFieldManager(sm, row));
+                                        op.replaceNonLoadedFields(cmd.getAllMemberPositions(), fm);
                                     }
                                     public FetchPlan getFetchPlanForLoading()
                                     {
