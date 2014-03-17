@@ -37,8 +37,8 @@ import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.fieldmanager.AbstractStoreFieldManager;
 import org.datanucleus.store.odf.ODFUtils;
-import org.datanucleus.store.types.TypeManager;
 import org.datanucleus.store.types.converters.TypeConverter;
+import org.datanucleus.store.types.converters.TypeConverterHelper;
 import org.datanucleus.util.Base64;
 import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
@@ -263,7 +263,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 // User-defined type converter
                 TypeConverter conv =
                     op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForName(mmd.getTypeConverterName());
-                Class datastoreType = TypeManager.getDatastoreTypeForTypeConverter(conv, mmd.getType());
+                Class datastoreType = TypeConverterHelper.getDatastoreTypeForTypeConverter(conv, mmd.getType());
                 if (datastoreType == String.class)
                 {
                     cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
