@@ -76,16 +76,16 @@ public class ODFUtils
      * Convenience method to find the row of an object in the provided sheet.
      * For application-identity does a search for a row with the specified PK field values.
      * For datastore-identity does a search for the row with the datastore column having the specified value
-     * @param sm ObjectProvider for the object
+     * @param op ObjectProvider for the object
      * @param spreadsheetDoc The spreadsheet document
      * @param originalValue Whether to use the original value (when available) when using non-durable id.
      * @return The row (or null if not found)
      */
-    public static OdfTableRow getTableRowForObjectInSheet(ObjectProvider sm, OdfSpreadsheetDocument spreadsheetDoc,
-            boolean originalValue)
+    public static OdfTableRow getTableRowForObjectInSheet(ObjectProvider op, OdfSpreadsheetDocument spreadsheetDoc, boolean originalValue)
     {
-        final AbstractClassMetaData cmd = sm.getClassMetaData();
-        String sheetName = sm.getExecutionContext().getStoreManager().getNamingFactory().getTableName(cmd);
+        ExecutionContext ec = op.getExecutionContext();
+        final AbstractClassMetaData cmd = op.getClassMetaData();
+        String sheetName = ec.getStoreManager().getNamingFactory().getTableName(cmd);
         OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table == null)
         {
@@ -94,7 +94,6 @@ public class ODFUtils
 
         if (cmd.getIdentityType() == IdentityType.APPLICATION)
         {
-            ExecutionContext ec = sm.getExecutionContext();
             ClassLoaderResolver clr = ec.getClassLoaderResolver();
             int[] pkFieldNumbers = cmd.getPKMemberPositions();
 
@@ -102,7 +101,7 @@ public class ODFUtils
             List pkFieldValList = new ArrayList(pkFieldNumbers.length);
             for (int i=0;i<pkFieldNumbers.length;i++)
             {
-                Object fieldValue = sm.provideField(pkFieldNumbers[i]);
+                Object fieldValue = op.provideField(pkFieldNumbers[i]);
                 AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(pkFieldNumbers[i]);
                 RelationType relationType = mmd.getRelationType(clr);
                 if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
@@ -111,9 +110,9 @@ public class ODFUtils
                     ObjectProvider embOP = ec.findObjectProvider(fieldValue);
                     if (embOP == null)
                     {
-                        embOP = ec.newObjectProviderForEmbedded(fieldValue, false, sm, pkFieldNumbers[i]);
+                        embOP = ec.newObjectProviderForEmbedded(fieldValue, false, op, pkFieldNumbers[i]);
                     }
-                    AbstractClassMetaData embCmd = sm.getExecutionContext().getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
+                    AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
                     {
                         pkFieldColList.add(getColumnPositionForFieldOfEmbeddedClass(j, mmd));
@@ -153,7 +152,7 @@ public class ODFUtils
         }
         else if (cmd.getIdentityType() == IdentityType.DATASTORE)
         {
-            OID oid = (OID)sm.getInternalObjectId();
+            OID oid = (OID)op.getInternalObjectId();
             Object key = oid.getKeyValue();
             int index = getColumnPositionForFieldOfClass(cmd, -1);
             List<OdfTableRow> rows = table.getRowList();
@@ -171,7 +170,6 @@ public class ODFUtils
         else
         {
             // Nondurable, comparing all suitable fields
-            ExecutionContext ec = sm.getExecutionContext();
             ClassLoaderResolver clr = ec.getClassLoaderResolver();
             int[] fieldNumbers = cmd.getAllMemberPositions();
 
@@ -184,19 +182,19 @@ public class ODFUtils
                 Object fieldValue = null;
                 if (originalValue)
                 {
-                    Object oldValue = sm.getAssociatedValue(ObjectProvider.ORIGINAL_FIELD_VALUE_KEY_PREFIX + fieldNumbers[i]);
+                    Object oldValue = op.getAssociatedValue(ObjectProvider.ORIGINAL_FIELD_VALUE_KEY_PREFIX + fieldNumbers[i]);
                     if (oldValue != null)
                     {
                         fieldValue = oldValue;
                     }
                     else
                     {
-                        fieldValue = sm.provideField(fieldNumbers[i]);
+                        fieldValue = op.provideField(fieldNumbers[i]);
                     }
                 }
                 else
                 {
-                    fieldValue = sm.provideField(fieldNumbers[i]);
+                    fieldValue = op.provideField(fieldNumbers[i]);
                 }
                 if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
                 {
@@ -204,9 +202,9 @@ public class ODFUtils
                     ObjectProvider embOP = ec.findObjectProvider(fieldValue);
                     if (embOP == null)
                     {
-                        embOP = ec.newObjectProviderForEmbedded(fieldValue, false, sm, fieldNumbers[i]);
+                        embOP = ec.newObjectProviderForEmbedded(fieldValue, false, op, fieldNumbers[i]);
                     }
-                    AbstractClassMetaData embCmd = sm.getExecutionContext().getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
+                    AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
                     {
                         fieldColList.add(getColumnPositionForFieldOfEmbeddedClass(j, mmd));
@@ -301,34 +299,34 @@ public class ODFUtils
      * Uses the column "position" attribute if defined, otherwise uses the column name (as an integer).
      * The field number is the absolute number (0 or higher); a value of -1 implies surrogate identity column,
      * and -2 implies surrogate version column
-     * @param acmd MetaData for the class
+     * @param cmd MetaData for the class
      * @param inputFieldNumber Absolute field number that we are interested in (-1 = datastore-id, -2=version)
      */
-    public static int getColumnPositionForFieldOfClass(AbstractClassMetaData acmd, int inputFieldNumber)
+    public static int getColumnPositionForFieldOfClass(AbstractClassMetaData cmd, int inputFieldNumber)
     {
         int fieldNumber = inputFieldNumber;
         if (inputFieldNumber == -1)
         {
             // Datastore-identity, so allocate next column after normal fields
-            fieldNumber = acmd.getNoOfManagedMembers() + acmd.getNoOfInheritedManagedMembers();
+            fieldNumber = cmd.getNoOfManagedMembers() + cmd.getNoOfInheritedManagedMembers();
         }
         else if (inputFieldNumber == -2)
         {
             // Version, so allocate next column after normal fields (and optionally datastore-identity)
-            if (acmd.getIdentityType() == IdentityType.DATASTORE)
+            if (cmd.getIdentityType() == IdentityType.DATASTORE)
             {
-                fieldNumber = acmd.getNoOfManagedMembers() + acmd.getNoOfInheritedManagedMembers() + 1;
+                fieldNumber = cmd.getNoOfManagedMembers() + cmd.getNoOfInheritedManagedMembers() + 1;
             }
             else
             {
-                fieldNumber = acmd.getNoOfManagedMembers() + acmd.getNoOfInheritedManagedMembers();
+                fieldNumber = cmd.getNoOfManagedMembers() + cmd.getNoOfInheritedManagedMembers();
             }
         }
 
         if (inputFieldNumber >= 0)
         {
             // Field of the class
-            AbstractMemberMetaData ammd = acmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
+            AbstractMemberMetaData ammd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
             Integer colPos = (ammd.getColumnMetaData() == null || ammd.getColumnMetaData().length == 0 ? 
                     null : ammd.getColumnMetaData()[0].getPosition());
             if (colPos == null)
@@ -359,7 +357,7 @@ public class ODFUtils
         else if (inputFieldNumber == -1)
         {
             // Surrogate datastore identity column
-            IdentityMetaData imd = acmd.getIdentityMetaData();
+            IdentityMetaData imd = cmd.getIdentityMetaData();
             if (imd != null)
             {
                 Integer colPos = (imd.getColumnMetaData() == null ? null : imd.getColumnMetaData().getPosition());
@@ -392,7 +390,7 @@ public class ODFUtils
         else if (inputFieldNumber == -2)
         {
             // Surrogate version column
-            VersionMetaData vmd = acmd.getVersionMetaDataForClass();
+            VersionMetaData vmd = cmd.getVersionMetaDataForClass();
             if (vmd != null)
             {
                 Integer colPos = (vmd.getColumnMetaData() == null ? null : vmd.getColumnMetaData().getPosition());
@@ -403,7 +401,7 @@ public class ODFUtils
                         String colName = vmd.getColumnMetaData().getName();
                         try
                         {
-                            return new Integer(colName).intValue();
+                            return Integer.valueOf(colName);
                         }
                         catch (NumberFormatException nfe)
                         {
