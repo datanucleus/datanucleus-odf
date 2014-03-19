@@ -18,7 +18,6 @@ Contributors:
 package org.datanucleus.store.odf;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.exceptions.NucleusDataStoreException;
@@ -29,7 +28,6 @@ import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.VersionMetaData;
-import org.datanucleus.metadata.VersionStrategy;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.AbstractPersistenceHandler;
 import org.datanucleus.store.StoreManager;
@@ -149,35 +147,39 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
                 cell.getOdfElement().setStyleName("DN_PK");
             }
-            if (cmd.isVersioned())
+
+            VersionMetaData vermd = cmd.getVersionMetaDataForClass();
+            if (vermd != null)
             {
+                Object nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), null);
+                if (vermd.getFieldName() != null)
+                {
+                    // Version field
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    if (verMmd.getType() == Integer.class || verMmd.getType() == int.class)
+                    {
+                        // Cater for Integer-based versions TODO Generalise this
+                        nextVersion = Integer.valueOf(((Long)nextVersion).intValue());
+                    }
+                }
+                op.setTransactionalVersion(nextVersion);
+                if (NucleusLogger.DATASTORE.isDebugEnabled())
+                {
+                    NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
+                        StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
+                }
+
                 int colIndex = ODFUtils.getColumnPositionForFieldOfClass(cmd, -2);
                 OdfTableCell cell = row.getCellByIndex(colIndex);
-                VersionMetaData vermd = cmd.getVersionMetaDataForClass();
-                if (vermd.getVersionStrategy() == VersionStrategy.VERSION_NUMBER)
+                if (nextVersion instanceof Long)
                 {
-                    long versionNumber = 1;
-                    op.setTransactionalVersion(Long.valueOf(versionNumber));
-                    if (NucleusLogger.DATASTORE.isDebugEnabled())
-                    {
-                        NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
-                            StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + versionNumber));
-                    }
                     cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    cell.setDoubleValue(new Double(versionNumber));
+                    cell.setDoubleValue(((Long)nextVersion).doubleValue());
                 }
-                else if (vermd.getVersionStrategy() == VersionStrategy.DATE_TIME)
+                else if (nextVersion instanceof Timestamp)
                 {
-                    Date date = new Date();
-                    Timestamp ts = new Timestamp(date.getTime());
-                    op.setTransactionalVersion(ts);
-                    if (NucleusLogger.DATASTORE.isDebugEnabled())
-                    {
-                        NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
-                            StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + ts));
-                    }
                     cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    cell.setDoubleValue(new Double(ts.getTime()));
+                    cell.setDoubleValue(new Double(((Timestamp)nextVersion).getTime()));
                 }
             }
 
@@ -227,24 +229,25 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             // TODO Add optimistic checks
             int[] updatedFieldNums = fieldNumbers;
-            Object currentVersion = op.getTransactionalVersion();
             Object nextVersion = null;
             AbstractClassMetaData cmd = op.getClassMetaData();
-            if (cmd.isVersioned())
+            VersionMetaData vermd = cmd.getVersionMetaDataForClass();
+            if (vermd != null)
             {
                 // Version object so calculate version to store with
-                VersionMetaData vermd = cmd.getVersionMetaDataForClass();
+                Object currentVersion = op.getTransactionalVersion();
+                if (currentVersion instanceof Integer)
+                {
+                    // Cater for Integer-based versions TODO Generalise this
+                    currentVersion = Long.valueOf(((Integer)currentVersion).longValue());
+                }
+                nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), currentVersion);
+
                 if (vermd.getFieldName() != null)
                 {
                     // Version field
                     AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
-                    if (currentVersion instanceof Integer)
-                    {
-                        // Cater for Integer-based versions TODO Generalise this
-                        currentVersion = Long.valueOf(((Integer)currentVersion).longValue());
-                    }
 
-                    nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), currentVersion);
                     if (verMmd.getType() == Integer.class || verMmd.getType() == int.class)
                     {
                         // Cater for Integer-based versions TODO Generalise this
@@ -268,12 +271,6 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                         updatedFieldNums[fieldNumbers.length] = verMmd.getAbsoluteFieldNumber();
                     }
                 }
-                else
-                {
-                    // Surrogate version column
-                    nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), currentVersion);
-                }
-                op.setTransactionalVersion(nextVersion);
             }
 
             long startTime = System.currentTimeMillis();
@@ -302,35 +299,29 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             }
             op.provideFields(updatedFieldNums, new StoreFieldManager(op, row, false));
 
-            if (cmd.isVersioned())
+            if (vermd != null)
             {
                 // Versioned object so set version cell in spreadsheet
+                op.setTransactionalVersion(nextVersion);
+                if (NucleusLogger.DATASTORE.isDebugEnabled())
+                {
+                    NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
+                        StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
+                }
+
                 int verCellIndex = ODFUtils.getColumnPositionForFieldOfClass(cmd, -2);
                 OdfTableCell verCell = row.getCellByIndex(verCellIndex);
-                VersionMetaData vermd = cmd.getVersionMetaDataForClass();
-                if (vermd.getVersionStrategy() == VersionStrategy.VERSION_NUMBER)
+                if (nextVersion instanceof Long)
                 {
-                    op.setTransactionalVersion(nextVersion);
-                    if (NucleusLogger.DATASTORE.isDebugEnabled())
-                    {
-                        NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
-                            StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), 
-                            "" + nextVersion));
-                    }
                     verCell.setDoubleValue(new Double((Long)nextVersion));
                 }
-                else if (vermd.getVersionStrategy() == VersionStrategy.DATE_TIME)
+                else if (nextVersion instanceof Integer)
                 {
-                    op.setTransactionalVersion(nextVersion);
-                    if (NucleusLogger.DATASTORE.isDebugEnabled())
-                    {
-                        NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
-                            StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
-                    }
-                    Timestamp ts = (Timestamp)nextVersion;
-                    Date date = new Date();
-                    date.setTime(ts.getTime());
-                    verCell.setDoubleValue(new Double(ts.getTime()));
+                    verCell.setDoubleValue(new Double((Integer)nextVersion));
+                }
+                else if (nextVersion instanceof Timestamp)
+                {
+                    verCell.setDoubleValue(new Double(((Timestamp)nextVersion).getTime()));
                 }
             }
 
