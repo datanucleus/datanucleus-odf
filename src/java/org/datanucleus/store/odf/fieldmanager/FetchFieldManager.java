@@ -439,6 +439,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     }
                 }
 
+                // TODO Make use of default TypeConverter for a type before falling back to String/Long
                 TypeConverter strConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
                 TypeConverter longConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
                 if (useLong && longConv != null)
