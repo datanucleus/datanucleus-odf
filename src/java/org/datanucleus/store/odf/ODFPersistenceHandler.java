@@ -36,6 +36,7 @@ import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.fieldmanager.DeleteFieldManager;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.odf.fieldmanager.StoreFieldManager;
+import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
 import org.datanucleus.util.StringUtils;
@@ -86,21 +87,6 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         assertReadOnlyForUpdateOfObject(op);
 
         AbstractClassMetaData cmd = op.getClassMetaData();
-        if (cmd.getIdentityType() == IdentityType.APPLICATION || cmd.getIdentityType() == IdentityType.DATASTORE)
-        {
-            // Enforce uniqueness of datastore rows
-            try
-            {
-                locateObject(op);
-                throw new NucleusUserException(LOCALISER_ODF.msg("ODF.Insert.ObjectWithIdAlreadyExists",
-                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
-            }
-            catch (NucleusObjectNotFoundException onfe)
-            {
-                // Do nothing since object with this id doesn't exist
-            }
-        }
-
         ExecutionContext ec = op.getExecutionContext();
         ManagedConnection mconn = storeMgr.getConnection(ec);
         try
@@ -113,9 +99,30 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             }
 
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
+            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            {
+                // Make sure schema exists, using this connection
+                ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+            }
+            Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+
+            if (cmd.getIdentityType() == IdentityType.APPLICATION || cmd.getIdentityType() == IdentityType.DATASTORE)
+            {
+                // Enforce uniqueness of datastore rows
+                try
+                {
+                    locateObject(op);
+                    throw new NucleusUserException(LOCALISER_ODF.msg("ODF.Insert.ObjectWithIdAlreadyExists",
+                        StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
+                }
+                catch (NucleusObjectNotFoundException onfe)
+                {
+                    // Do nothing since object with this id doesn't exist
+                }
+            }
 
             // Find the sheet (table) appropriate for storing objects of this class
-            String sheetName = storeMgr.getNamingFactory().getTableName(cmd);
+            String sheetName = schemaTable.getIdentifier();
             OdfTable table = spreadsheetDoc.getTableByName(sheetName);
             if (table == null)
             {
@@ -221,16 +228,23 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         // Check if read-only so update not permitted
         assertReadOnlyForUpdateOfObject(op);
 
+        AbstractClassMetaData cmd = op.getClassMetaData();
         ExecutionContext ec = op.getExecutionContext();
         ManagedConnection mconn = storeMgr.getConnection(ec);
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
+            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            {
+                // Make sure schema exists, using this connection
+                ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+            }
+//            Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+
             // TODO Add optimistic checks
             int[] updatedFieldNums = fieldNumbers;
             Object nextVersion = null;
-            AbstractClassMetaData cmd = op.getClassMetaData();
             VersionMetaData vermd = cmd.getVersionMetaDataForClass();
             if (vermd != null)
             {
@@ -349,42 +363,42 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     /* (non-Javadoc)
      * @see org.datanucleus.store.StorePersistenceHandler#deleteObject(org.datanucleus.state.ObjectProvider)
      */
-    public void deleteObject(ObjectProvider sm)
+    public void deleteObject(ObjectProvider op)
     {
         // Check if read-only so update not permitted
-        assertReadOnlyForUpdateOfObject(sm);
+        assertReadOnlyForUpdateOfObject(op);
 
-        ExecutionContext ec = sm.getExecutionContext();
+        AbstractClassMetaData cmd = op.getClassMetaData();
+        ExecutionContext ec = op.getExecutionContext();
         ManagedConnection mconn = storeMgr.getConnection(ec);
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
+            Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
             // TODO Add optimistic checks
 
             // Delete all reachable PC objects (due to dependent-field)
-            sm.loadUnloadedFields();
-            sm.provideFields(sm.getClassMetaData().getAllMemberPositions(), new DeleteFieldManager(sm));
+            op.loadUnloadedFields();
+            op.provideFields(cmd.getAllMemberPositions(), new DeleteFieldManager(op));
 
             // Delete this object
             long startTime = System.currentTimeMillis();
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {
                 NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.Delete.Start", 
-                    StringUtils.toJVMIDString(sm.getObject()), sm.getInternalObjectId()));
+                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
             }
 
-            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(sm, spreadsheetDoc, false);
+            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
             if (row == null)
             {
-                throw new NucleusObjectNotFoundException("object not found", sm.getObject());
+                throw new NucleusObjectNotFoundException("object not found", op.getObject());
             }
             else
             {
                 // Remove the row node
-                String sheetName = storeMgr.getNamingFactory().getTableName(sm.getClassMetaData());
-                OdfTable table = spreadsheetDoc.getTableByName(sheetName);
-                table.removeRowsByIndex(row.getRowIndex(), 1);
+                spreadsheetDoc.getTableByName(schemaTable.getIdentifier()).removeRowsByIndex(row.getRowIndex(), 1);
             }
 
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())

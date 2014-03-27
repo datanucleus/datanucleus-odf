@@ -45,10 +45,15 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
     @Override
     public void createSchemaForClasses(Set<String> classNames, Properties props, Object connection)
     {
-        ManagedConnection mconn = storeMgr.getConnection(-1);
+        OdfSpreadsheetDocument spreadsheet = (OdfSpreadsheetDocument)connection;
+        ManagedConnection mconn = null;
         try
         {
-            OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
+            if (spreadsheet == null)
+            {
+                mconn = storeMgr.getConnection(-1);
+                spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
+            }
 
             Iterator<String> classIter = classNames.iterator();
             ClassLoaderResolver clr = storeMgr.getNucleusContext().getClassLoaderResolver(null);
@@ -60,18 +65,21 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 {
                     // Find/Create the sheet (table) appropriate for storing objects of this class
                     String sheetName = storeMgr.getNamingFactory().getTableName(cmd);
-                    OdfTable table = spreadsheetDoc.getTableByName(sheetName);
+                    OdfTable table = spreadsheet.getTableByName(sheetName);
                     if (table == null)
                     {
                         // Table for this class doesn't exist yet so create
-                        table = ODFUtils.addTableForClass(spreadsheetDoc, cmd, sheetName, storeMgr);
+                        table = ODFUtils.addTableForClass(spreadsheet, cmd, sheetName, storeMgr);
                     }
                 }
             }
         }
         finally
         {
-            mconn.release();
+            if (mconn != null)
+            {
+                mconn.release();
+            }
         }
     }
 
@@ -81,10 +89,15 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
     @Override
     public void deleteSchemaForClasses(Set<String> classNames, Properties props, Object connection)
     {
-        ManagedConnection mconn = storeMgr.getConnection(-1);
+        OdfSpreadsheetDocument spreadsheet = (OdfSpreadsheetDocument)connection;
+        ManagedConnection mconn = null;
         try
         {
-            OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
+            if (spreadsheet == null)
+            {
+                mconn = storeMgr.getConnection(-1);
+                spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
+            }
 
             Iterator<String> classIter = classNames.iterator();
             ClassLoaderResolver clr = storeMgr.getNucleusContext().getClassLoaderResolver(null);
@@ -96,7 +109,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 {
                     // Find/Delete the sheet (table) appropriate for storing objects of this class
                     String sheetName = storeMgr.getNamingFactory().getTableName(cmd);
-                    OdfTable table = spreadsheetDoc.getTableByName(sheetName);
+                    OdfTable table = spreadsheet.getTableByName(sheetName);
                     if (table != null)
                     {
                         table.remove();
@@ -106,7 +119,10 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
         }
         finally
         {
-            mconn.release();
+            if (mconn != null)
+            {
+                mconn.release();
+            }
         }
     }
 
