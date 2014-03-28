@@ -17,13 +17,21 @@ Contributors:
 **********************************************************************/
 package org.datanucleus.store.odf.fieldmanager;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.datanucleus.ClassLoaderResolver;
+import org.datanucleus.ExecutionContext;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.EmbeddedMetaData;
+import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
-import org.datanucleus.store.odf.ODFUtils;
+import org.datanucleus.store.fieldmanager.FieldManager;
+import org.datanucleus.store.schema.table.MemberColumnMapping;
+import org.datanucleus.store.schema.table.Table;
+import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 
 /**
@@ -31,41 +39,63 @@ import org.odftoolkit.odfdom.doc.table.OdfTableRow;
  */
 public class FetchEmbeddedFieldManager extends FetchFieldManager
 {
-    AbstractMemberMetaData embeddedMetaData;
+    /** Metadata for the embedded member (maybe nested) that this FieldManager represents). */
+    protected List<AbstractMemberMetaData> mmds;
 
-    public FetchEmbeddedFieldManager(ObjectProvider sm, OdfTableRow row, AbstractMemberMetaData mmd)
+    public FetchEmbeddedFieldManager(ExecutionContext ec, OdfTableRow row, AbstractClassMetaData cmd, List<AbstractMemberMetaData> mmds, Table table)
     {
-        super(sm, row);
-        embeddedMetaData = mmd;
+        super(ec, cmd, row, table);
+        this.mmds = mmds;
     }
 
-    protected int getColumnIndexForMember(int memberNumber)
+    public FetchEmbeddedFieldManager(ObjectProvider op, OdfTableRow row, List<AbstractMemberMetaData> mmds, Table table)
     {
-        return ODFUtils.getColumnPositionForFieldOfEmbeddedClass(memberNumber, embeddedMetaData);
+        super(op, row, table);
+        this.mmds = mmds;
+    }
+
+    protected MemberColumnMapping getColumnMapping(int fieldNumber)
+    {
+        List<AbstractMemberMetaData> embMmds = new ArrayList<AbstractMemberMetaData>(mmds);
+        embMmds.add(cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber));
+        return table.getMemberColumnMappingForEmbeddedMember(embMmds);
     }
 
     public Object fetchObjectField(int fieldNumber)
     {
+        AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
         ClassLoaderResolver clr = ec.getClassLoaderResolver();
-        EmbeddedMetaData emd = embeddedMetaData.getEmbeddedMetaData();
-        AbstractMemberMetaData[] emb_mmd = emd.getMemberMetaData();
-        AbstractMemberMetaData mmd = emb_mmd[fieldNumber];
         RelationType relationType = mmd.getRelationType(clr);
-
-        // Special cases
-        if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
+        EmbeddedMetaData embmd = mmds.get(0).getEmbeddedMetaData();
+        if (mmds.size() == 1 && embmd != null && embmd.getOwnerMember() != null && embmd.getOwnerMember().equals(mmd.getName()))
         {
-            // Persistable object embedded into table of this object
-            Class embcls = mmd.getType();
-            AbstractClassMetaData embcmd = ec.getMetaDataManager().getMetaDataForClass(embcls, clr);
-            if (embcmd != null)
-            {
-                ObjectProvider embSM = ec.newObjectProviderForEmbedded(embcmd, op, fieldNumber);
-                embSM.replaceFields(embcmd.getAllMemberPositions(), new FetchEmbeddedFieldManager(embSM, row, mmd));
-                return embSM.getObject();
-            }
+            // Special case of this being a link back to the owner. TODO Repeat this for nested and their owners
+            ObjectProvider[] ownerOps = op.getEmbeddedOwners();
+            return (ownerOps != null && ownerOps.length > 0 ? ownerOps[0].getObject() : null);
         }
 
-        return fetchObjectFieldFromCell(fieldNumber, mmd, clr);
+        if (relationType != RelationType.NONE && MetaDataUtils.getInstance().isMemberEmbedded(ec.getMetaDataManager(), clr, mmd, relationType, null))
+        {
+            // Embedded field
+            if (RelationType.isRelationSingleValued(relationType))
+            {
+                // Persistable object embedded into this table
+                List<AbstractMemberMetaData> embMmds = new ArrayList<AbstractMemberMetaData>(mmds);
+                embMmds.add(mmd);
+                AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
+                ObjectProvider embOP = ec.newObjectProviderForEmbedded(embCmd, op, fieldNumber);
+                FieldManager fetchEmbFM = new FetchEmbeddedFieldManager(embOP, row, embMmds, table);
+                embOP.replaceFields(embCmd.getAllMemberPositions(), fetchEmbFM);
+                return embOP.getObject();
+            }
+            else if (RelationType.isRelationMultiValued(relationType))
+            {
+                // TODO Embedded Collection
+                NucleusLogger.PERSISTENCE.debug("Field=" + mmd.getFullFieldName() + " not currently supported (embedded)");
+            }
+            return null; // Remove this when we support embedded
+        }
+
+        return fetchObjectFieldFromCell(fieldNumber, mmd, clr, relationType);
     }
 }

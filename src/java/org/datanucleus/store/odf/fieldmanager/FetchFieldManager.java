@@ -18,10 +18,12 @@ Contributors:
 package org.datanucleus.store.odf.fieldmanager;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.datanucleus.ClassLoaderResolver;
@@ -36,10 +38,12 @@ import org.datanucleus.metadata.ColumnMetaData;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
+import org.datanucleus.store.schema.table.MemberColumnMapping;
+import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.store.types.converters.TypeConverter;
 import org.datanucleus.store.types.converters.TypeConverterHelper;
 import org.datanucleus.store.fieldmanager.AbstractFetchFieldManager;
-import org.datanucleus.store.odf.ODFUtils;
+import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.types.SCOUtils;
 import org.datanucleus.util.Base64;
 import org.datanucleus.util.NucleusLogger;
@@ -51,23 +55,26 @@ import org.odftoolkit.odfdom.doc.table.OdfTableRow;
  */
 public class FetchFieldManager extends AbstractFetchFieldManager
 {
+    protected final Table table;
     protected final OdfTableRow row;
 
-    public FetchFieldManager(ObjectProvider op, OdfTableRow row)
+    public FetchFieldManager(ObjectProvider op, OdfTableRow row, Table table)
     {
         super(op);
+        this.table = table;
         this.row = row;
     }
 
-    public FetchFieldManager(ExecutionContext ec, AbstractClassMetaData cmd, OdfTableRow row)
+    public FetchFieldManager(ExecutionContext ec, AbstractClassMetaData cmd, OdfTableRow row, Table table)
     {
         super(ec, cmd);
+        this.table = table;
         this.row = row;
     }
 
-    protected int getColumnIndexForMember(int memberNumber)
+    protected MemberColumnMapping getColumnMapping(int fieldNumber)
     {
-        return ODFUtils.getColumnPositionForFieldOfClass(cmd, memberNumber);
+        return table.getMemberColumnMappingForMember(cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber));
     }
 
     /* (non-Javadoc)
@@ -76,8 +83,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public boolean fetchBooleanField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         return cell.getBooleanValue();
     }
 
@@ -87,8 +93,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public byte fetchByteField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         Double val = cell.getDoubleValue();
         if (val == null)
         {
@@ -103,8 +108,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public char fetchCharField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         return cell.getStringValue().charAt(0);
     }
 
@@ -114,8 +118,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public double fetchDoubleField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         Double val = cell.getDoubleValue();
         if (val == null)
         {
@@ -130,8 +133,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public float fetchFloatField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         Double val = cell.getDoubleValue();
         if (val == null)
         {
@@ -146,8 +148,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public int fetchIntField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         Double val = cell.getDoubleValue();
         if (val == null)
         {
@@ -162,8 +163,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public long fetchLongField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         Double val = cell.getDoubleValue();
         if (val == null)
         {
@@ -178,8 +178,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public short fetchShortField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         Double val = cell.getDoubleValue();
         if (val == null)
         {
@@ -194,8 +193,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     @Override
     public String fetchStringField(int fieldNumber)
     {
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         return cell.getStringValue();
     }
 
@@ -210,38 +208,32 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         RelationType relationType = mmd.getRelationType(clr);
 
         // Special cases
-        if (relationType != RelationType.NONE)
+        if (relationType != RelationType.NONE && MetaDataUtils.getInstance().isMemberEmbedded(ec.getMetaDataManager(), clr, mmd, relationType, null))
         {
-            if (MetaDataUtils.getInstance().isMemberEmbedded(ec.getMetaDataManager(), clr, mmd, relationType, null))
+            // Embedded field
+            if (RelationType.isRelationSingleValued(relationType))
             {
-                // Embedded field
-                if (RelationType.isRelationSingleValued(relationType))
-                {
-                    // Persistable object embedded into table of this object
-                    Class embcls = mmd.getType();
-                    AbstractClassMetaData embcmd = ec.getMetaDataManager().getMetaDataForClass(embcls, clr);
-                    if (embcmd != null)
-                    {
-                        ObjectProvider embOP = ec.newObjectProviderForEmbedded(embcmd, op, fieldNumber);
-                        embOP.replaceFields(embcmd.getAllMemberPositions(), new FetchEmbeddedFieldManager(embOP, row, mmd));
-                        return embOP.getObject();
-                    }
-                }
-                else if (RelationType.isRelationMultiValued(relationType))
-                {
-                    throw new NucleusUserException("Dont support embedded multi-valued field at " + mmd.getFullFieldName() + " with ODF");
-                }
+                // TODO Null detection
+                List<AbstractMemberMetaData> embMmds = new ArrayList<AbstractMemberMetaData>();
+                embMmds.add(mmd);
+                AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
+                ObjectProvider embOP = ec.newObjectProviderForEmbedded(embCmd, op, fieldNumber);
+                FieldManager fetchEmbFM = new FetchEmbeddedFieldManager(embOP, row, embMmds, table);
+                embOP.replaceFields(embCmd.getAllMemberPositions(), fetchEmbFM);
+                return embOP.getObject();
+            }
+            else if (RelationType.isRelationMultiValued(relationType))
+            {
+                throw new NucleusUserException("Dont support embedded multi-valued field at " + mmd.getFullFieldName() + " with ODF");
             }
         }
 
-        return fetchObjectFieldFromCell(fieldNumber, mmd, clr);
+        return fetchObjectFieldFromCell(fieldNumber, mmd, clr, relationType);
     }
 
-    protected Object fetchObjectFieldFromCell(int fieldNumber, AbstractMemberMetaData mmd, ClassLoaderResolver clr)
+    protected Object fetchObjectFieldFromCell(int fieldNumber, AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
     {
-        RelationType relationType =  mmd.getRelationType(clr);
-        int index = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(index);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         if (relationType == RelationType.NONE)
         {
             Class type = mmd.getType();

@@ -18,15 +18,18 @@ Contributors :
 package org.datanucleus.store.odf.fieldmanager;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.ExecutionContext;
+import org.datanucleus.exceptions.NucleusException;
 import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
@@ -36,10 +39,12 @@ import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.fieldmanager.AbstractStoreFieldManager;
-import org.datanucleus.store.odf.ODFUtils;
+import org.datanucleus.store.schema.table.MemberColumnMapping;
+import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.store.types.converters.TypeConverter;
 import org.datanucleus.store.types.converters.TypeConverterHelper;
 import org.datanucleus.util.Base64;
+import org.datanucleus.util.ClassUtils;
 import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
@@ -50,18 +55,27 @@ import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
  */
 public class StoreFieldManager extends AbstractStoreFieldManager
 {
-    /** Row being inserted/updated. */
+    protected final Table table;
+
     protected final OdfTableRow row;
 
-    public StoreFieldManager(ObjectProvider op, OdfTableRow row, boolean insert)
+    public StoreFieldManager(ExecutionContext ec, AbstractClassMetaData cmd, OdfTableRow row, boolean insert, Table table)
+    {
+        super(ec, cmd, insert);
+        this.row = row;
+        this.table = table;
+    }
+
+    public StoreFieldManager(ObjectProvider op, OdfTableRow row, boolean insert, Table table)
     {
         super(op, insert);
+        this.table = table;
         this.row = row;
     }
 
-    protected int getColumnIndexForMember(int memberNumber)
+    protected MemberColumnMapping getColumnMapping(int fieldNumber)
     {
-        return ODFUtils.getColumnPositionForFieldOfClass(op.getClassMetaData(), memberNumber);
+        return table.getMemberColumnMappingForMember(cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber));
     }
 
     public void storeBooleanField(int fieldNumber, boolean value)
@@ -70,8 +84,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.BOOLEAN.toString());
         cell.setBooleanValue(value);
     }
@@ -82,8 +95,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
         cell.setDoubleValue(new Double(value));
     }
@@ -94,8 +106,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
         cell.setStringValue("" + value);
     }
@@ -106,8 +117,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
         cell.setDoubleValue(value);
     }
@@ -118,8 +128,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
         cell.setDoubleValue(new Double(value));
     }
@@ -130,8 +139,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
         cell.setDoubleValue(new Double(value));
     }
@@ -142,8 +150,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
         cell.setDoubleValue(new Double(value));
     }
@@ -154,8 +161,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
         cell.setDoubleValue(new Double(value));
     }
@@ -166,8 +172,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             return;
         }
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
         cell.setStringValue(value);
     }
@@ -176,8 +181,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
     {
         ExecutionContext ec = op.getExecutionContext();
         ClassLoaderResolver clr = ec.getClassLoaderResolver();
-        AbstractMemberMetaData mmd =
-            op.getClassMetaData().getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
+        AbstractMemberMetaData mmd = op.getClassMetaData().getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
         if (!isStorable(mmd))
         {
             return;
@@ -185,47 +189,65 @@ public class StoreFieldManager extends AbstractStoreFieldManager
 
         // Special cases
         RelationType relationType = mmd.getRelationType(clr);
-        if (relationType != RelationType.NONE)
+        if (relationType != RelationType.NONE && MetaDataUtils.getInstance().isMemberEmbedded(ec.getMetaDataManager(), clr, mmd, relationType, null))
         {
-            if (MetaDataUtils.getInstance().isMemberEmbedded(ec.getMetaDataManager(), clr, mmd, relationType, null))
+            // Embedded field
+            if (RelationType.isRelationSingleValued(relationType))
             {
-                // Embedded field
-                if (RelationType.isRelationSingleValued(relationType))
+                AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
+                int[] embMmdPosns = embCmd.getAllMemberPositions();
+                List<AbstractMemberMetaData> embMmds = new ArrayList<AbstractMemberMetaData>();
+                embMmds.add(mmd);
+                if (value == null)
                 {
-                    // Persistable object embedded into this table
-                    Class embcls = mmd.getType();
-                    AbstractClassMetaData embcmd = ec.getMetaDataManager().getMetaDataForClass(embcls, clr);
-                    if (embcmd != null) 
+                    // Store null in all columns for the embedded (and nested embedded) object(s)
+                    StoreEmbeddedFieldManager storeEmbFM = new StoreEmbeddedFieldManager(ec, embCmd, row, insert, embMmds, table);
+                    for (int i=0;i<embMmdPosns.length;i++)
                     {
-                        ObjectProvider embSM = null;
-                        if (value != null)
+                        AbstractMemberMetaData embMmd = embCmd.getMetaDataForManagedMemberAtAbsolutePosition(embMmdPosns[i]);
+                        if (String.class.isAssignableFrom(embMmd.getType()) || embMmd.getType().isPrimitive() || ClassUtils.isPrimitiveWrapperType(mmd.getTypeName()))
                         {
-                            embSM = ec.findObjectProviderForEmbedded(value, op, mmd);
+                            // Store a null for any primitive/wrapper/String fields
+                            List<AbstractMemberMetaData> colEmbMmds = new ArrayList<AbstractMemberMetaData>(embMmds);
+                            colEmbMmds.add(embMmd);
+                            MemberColumnMapping mapping = table.getMemberColumnMappingForEmbeddedMember(colEmbMmds);
+                            for (int j=0;j<mapping.getNumberOfColumns();j++)
+                            {
+                                // TODO Put null in this column
+                            }
                         }
-                        else
+                        else if (Object.class.isAssignableFrom(embMmd.getType()))
                         {
-                            embSM = ec.newObjectProviderForEmbedded(embcmd, op, fieldNumber);
+                            storeEmbFM.storeObjectField(embMmdPosns[i], null);
                         }
-
-                        embSM.provideFields(embcmd.getAllMemberPositions(), new StoreEmbeddedFieldManager(embSM, row, mmd, insert));
-                        return;
                     }
+                    return;
                 }
-                else if (RelationType.isRelationMultiValued(relationType))
-                {
-                    throw new NucleusUserException("Dont support embedded multi-valued field at " + mmd.getFullFieldName() + " with ODF");
-                }
+
+                ObjectProvider embOP = ec.findObjectProviderForEmbedded(value, op, mmd);
+                StoreEmbeddedFieldManager storeEmbFM = new StoreEmbeddedFieldManager(embOP, row, insert, embMmds, table);
+                embOP.provideFields(embMmdPosns, storeEmbFM);
+                return;
+            }
+            else if (RelationType.isRelationMultiValued(relationType))
+            {
+                throw new NucleusUserException("Dont support embedded multi-valued field at " + mmd.getFullFieldName() + " with ODF");
             }
         }
 
-        storeObjectFieldInCell(fieldNumber, value, mmd, clr);
+        storeObjectFieldInCell(fieldNumber, value, mmd, clr, relationType);
     }
 
-    protected void storeObjectFieldInCell(int fieldNumber, Object value, AbstractMemberMetaData mmd, ClassLoaderResolver clr)
+    protected void storeObjectFieldInCell(int fieldNumber, Object value, AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
     {
-        RelationType relationType = mmd.getRelationType(clr);
-        int colIndex = getColumnIndexForMember(fieldNumber);
-        OdfTableCell cell = row.getCellByIndex(colIndex);
+        MemberColumnMapping mapping = getColumnMapping(fieldNumber);
+        if (mapping.getNumberOfColumns() > 1)
+        {
+            // TODO Support multicolumn mappings
+            throw new NucleusException("Dont yet support members being mapped to multiple columns : " + mapping.getMemberMetaData().getFullFieldName());
+        }
+
+        OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
         if (value == null)
         {
             if (Number.class.isAssignableFrom(mmd.getType()))
@@ -258,43 +280,49 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         else if (relationType == RelationType.NONE)
         {
-            if (mmd.getTypeConverterName() != null)
+            if (mapping.getTypeConverter() != null)
             {
-                // User-defined type converter
-                TypeConverter conv =
-                    op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForName(mmd.getTypeConverterName());
-                Class datastoreType = TypeConverterHelper.getDatastoreTypeForTypeConverter(conv, mmd.getType());
-                if (datastoreType == String.class)
+                // Persist using the provided converter
+                Object datastoreValue = mapping.getTypeConverter().toDatastoreType(value);
+                Class datastoreType = TypeConverterHelper.getDatastoreTypeForTypeConverter(mapping.getTypeConverter(), mmd.getType());
+                if (mapping.getNumberOfColumns() == 1)
                 {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
-                    cell.setStringValue((String)conv.toDatastoreType(value));
-                    return;
-                }
-                else if (Number.class.isAssignableFrom(datastoreType))
-                {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    cell.setDoubleValue(Double.valueOf((Double)conv.toDatastoreType(value)));
-                    return;
-                }
-                else if (Boolean.class.isAssignableFrom(datastoreType))
-                {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.BOOLEAN.toString());
-                    cell.setBooleanValue(Boolean.valueOf((Boolean)conv.toDatastoreType(value)));
-                    return;
-                }
-                else if (java.sql.Time.class.isAssignableFrom(datastoreType))
-                {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.TIME.toString());
-                    cell.setTimeValue(getCalendarForTime((java.sql.Time)conv.toDatastoreType(value)));
-                    return;
-                }
-                else if (Date.class.isAssignableFrom(datastoreType))
-                {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.DATE.toString());
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime((Date)conv.toDatastoreType(value));
-                    cell.setDateValue(cal);
-                    return;
+                    if (datastoreType == String.class)
+                    {
+                        cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
+                        cell.setStringValue((String)datastoreValue);
+                        return;
+                    }
+                    else if (Number.class.isAssignableFrom(datastoreType))
+                    {
+                        cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
+                        cell.setDoubleValue(Double.valueOf((Double)datastoreValue));
+                        return;
+                    }
+                    else if (Boolean.class.isAssignableFrom(datastoreType))
+                    {
+                        cell.setValueType(OfficeValueTypeAttribute.Value.BOOLEAN.toString());
+                        cell.setBooleanValue(Boolean.valueOf((Boolean)datastoreValue));
+                        return;
+                    }
+                    else if (java.sql.Time.class.isAssignableFrom(datastoreType))
+                    {
+                        cell.setValueType(OfficeValueTypeAttribute.Value.TIME.toString());
+                        cell.setTimeValue(getCalendarForTime((java.sql.Time)datastoreValue));
+                        return;
+                    }
+                    else if (Date.class.isAssignableFrom(datastoreType))
+                    {
+                        cell.setValueType(OfficeValueTypeAttribute.Value.DATE.toString());
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime((Date)datastoreValue);
+                        cell.setDateValue(cal);
+                        return;
+                    }
+                    else
+                    {
+                        NucleusLogger.DATASTORE_PERSIST.warn("TypeConverter for member " + mmd.getFullFieldName() + " converts to " + datastoreType.getName() + " - not yet supported");
+                    }
                 }
             }
             else if (value instanceof java.sql.Time)
@@ -413,7 +441,6 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     }
                 }
 
-                // TODO Make use of default TypeConverter for a type before falling back to String/Long
                 TypeConverter strConv = 
                     op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
                 TypeConverter longConv = 

@@ -106,6 +106,15 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             }
             Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
 
+            // Find the sheet (table) appropriate for storing objects of this class TODO Coordinate this with manageClasses above, maybe not needed here
+            String sheetName = schemaTable.getIdentifier();
+            OdfTable table = spreadsheetDoc.getTableByName(sheetName);
+            if (table == null)
+            {
+                // Table for this class doesn't exist yet so create
+                table = ODFUtils.addTableForClass(spreadsheetDoc, cmd, schemaTable, storeMgr);
+            }
+
             if (cmd.getIdentityType() == IdentityType.APPLICATION || cmd.getIdentityType() == IdentityType.DATASTORE)
             {
                 // Enforce uniqueness of datastore rows
@@ -121,24 +130,15 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
             }
 
-            // Find the sheet (table) appropriate for storing objects of this class
-            String sheetName = schemaTable.getIdentifier();
-            OdfTable table = spreadsheetDoc.getTableByName(sheetName);
-            if (table == null)
-            {
-                // Table for this class doesn't exist yet so create
-                table = ODFUtils.addTableForClass(spreadsheetDoc, cmd, sheetName, storeMgr);
-            }
-
             // Add a new row to this table for this object
             OdfTableRow row = table.appendRow();
 
             // Add cells for the fields to this row
-            op.provideFields(cmd.getAllMemberPositions(), new StoreFieldManager(op, row, true));
+            op.provideFields(cmd.getAllMemberPositions(), new StoreFieldManager(op, row, true, schemaTable));
 
             if (cmd.getIdentityType() == IdentityType.DATASTORE)
             {
-                int colIndex = ODFUtils.getColumnPositionForFieldOfClass(cmd, -1);
+                int colIndex = schemaTable.getDatastoreIdColumn().getPosition();
                 OdfTableCell cell = row.getCellByIndex(colIndex);
                 Object idKey = ((OID)op.getInternalObjectId()).getKeyValue();
                 if (idKey instanceof String)
@@ -176,7 +176,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
                 }
 
-                int colIndex = ODFUtils.getColumnPositionForFieldOfClass(cmd, -2);
+                int colIndex = schemaTable.getVersionColumn().getPosition();
                 OdfTableCell cell = row.getCellByIndex(colIndex);
                 if (nextVersion instanceof Long)
                 {
@@ -240,7 +240,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 // Make sure schema exists, using this connection
                 ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
             }
-//            Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+            Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
 
             // TODO Add optimistic checks
             int[] updatedFieldNums = fieldNumbers;
@@ -311,7 +311,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 throw new NucleusDataStoreException(LOCALISER_ODF.msg("ODF.RowNotFoundForSheetForWorkbook",
                     sheetName, StringUtils.toJVMIDString(op.getInternalObjectId())));
             }
-            op.provideFields(updatedFieldNums, new StoreFieldManager(op, row, false));
+            op.provideFields(updatedFieldNums, new StoreFieldManager(op, row, false, schemaTable));
 
             if (vermd != null)
             {
@@ -323,7 +323,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
                 }
 
-                int verCellIndex = ODFUtils.getColumnPositionForFieldOfClass(cmd, -2);
+                int verCellIndex = schemaTable.getVersionColumn().getPosition();
                 OdfTableCell verCell = row.getCellByIndex(verCellIndex);
                 if (nextVersion instanceof Long)
                 {
@@ -425,49 +425,50 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     /* (non-Javadoc)
      * @see org.datanucleus.store.StorePersistenceHandler#fetchObject(org.datanucleus.state.ObjectProvider, int[])
      */
-    public void fetchObject(ObjectProvider sm, int[] fieldNumbers)
+    public void fetchObject(ObjectProvider op, int[] fieldNumbers)
     {
-        AbstractClassMetaData acmd = sm.getClassMetaData();
+        AbstractClassMetaData cmd = op.getClassMetaData();
         if (NucleusLogger.PERSISTENCE.isDebugEnabled())
         {
             // Debug information about what we are retrieving
             StringBuffer str = new StringBuffer("Fetching object \"");
-            str.append(StringUtils.toJVMIDString(sm.getObject())).append("\" (id=");
-            str.append(sm.getInternalObjectId()).append(")").append(" fields [");
+            str.append(StringUtils.toJVMIDString(op.getObject())).append("\" (id=");
+            str.append(op.getInternalObjectId()).append(")").append(" fields [");
             for (int i=0;i<fieldNumbers.length;i++)
             {
                 if (i > 0)
                 {
                     str.append(",");
                 }
-                str.append(acmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumbers[i]).getName());
+                str.append(cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumbers[i]).getName());
             }
             str.append("]");
             NucleusLogger.PERSISTENCE.debug(str.toString());
         }
 
-        ExecutionContext ec = sm.getExecutionContext();
+        ExecutionContext ec = op.getExecutionContext();
         ManagedConnection mconn = storeMgr.getConnection(ec);
         boolean notFound = false;
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
+            Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
             long startTime = System.currentTimeMillis();
             if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
             {
                 NucleusLogger.DATASTORE_RETRIEVE.debug(LOCALISER_ODF.msg("ODF.Fetch.Start", 
-                    StringUtils.toJVMIDString(sm.getObject()), sm.getInternalObjectId()));
+                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
             }
 
-            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(sm, spreadsheetDoc, false);
+            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
             if (row == null)
             {
                 notFound = true;
             }
             else
             {
-                sm.replaceFields(fieldNumbers, new FetchFieldManager(sm, row));
+                op.replaceFields(fieldNumbers, new FetchFieldManager(op, row, schemaTable));
 
                 if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
                 {
@@ -493,7 +494,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
         if (notFound)
         {
-            throw new NucleusObjectNotFoundException("object not found", sm.getObject());
+            throw new NucleusObjectNotFoundException("object not found", op.getObject());
         }
     }
 

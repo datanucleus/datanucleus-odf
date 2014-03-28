@@ -23,9 +23,12 @@ import java.util.Set;
 
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.metadata.AbstractClassMetaData;
+import org.datanucleus.store.StoreData;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.schema.AbstractStoreSchemaHandler;
+import org.datanucleus.store.schema.table.CompleteClassTable;
+import org.datanucleus.store.schema.table.Table;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.doc.table.OdfTable;
 
@@ -64,12 +67,23 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 if (cmd != null)
                 {
                     // Find/Create the sheet (table) appropriate for storing objects of this class
-                    String sheetName = storeMgr.getNamingFactory().getTableName(cmd);
+                    StoreData storeData = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+                    Table schemaTable = null;
+                    if (storeData != null)
+                    {
+                        schemaTable = (Table) storeData.getProperties().get("tableObject");
+                    }
+                    else
+                    {
+                        schemaTable = new CompleteClassTable(storeMgr, cmd, new SchemaVerifierImpl(storeMgr, cmd, clr));
+                    }
+
+                    String sheetName = schemaTable.getIdentifier();
                     OdfTable table = spreadsheet.getTableByName(sheetName);
                     if (table == null)
                     {
                         // Table for this class doesn't exist yet so create
-                        table = ODFUtils.addTableForClass(spreadsheet, cmd, sheetName, storeMgr);
+                        table = ODFUtils.addTableForClass(spreadsheet, cmd, schemaTable, storeMgr);
                     }
                 }
             }
@@ -108,8 +122,18 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 if (cmd != null)
                 {
                     // Find/Delete the sheet (table) appropriate for storing objects of this class
-                    String sheetName = storeMgr.getNamingFactory().getTableName(cmd);
-                    OdfTable table = spreadsheet.getTableByName(sheetName);
+                    StoreData storeData = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+                    Table schemaTable = null;
+                    if (storeData != null)
+                    {
+                        schemaTable = (Table) storeData.getProperties().get("tableObject");
+                    }
+                    else
+                    {
+                        schemaTable = new CompleteClassTable(storeMgr, cmd, new SchemaVerifierImpl(storeMgr, cmd, clr));
+                    }
+
+                    OdfTable table = spreadsheet.getTableByName(schemaTable.getIdentifier());
                     if (table != null)
                     {
                         table.remove();

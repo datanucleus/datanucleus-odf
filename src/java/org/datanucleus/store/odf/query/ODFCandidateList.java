@@ -37,6 +37,7 @@ import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.odf.ODFUtils;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.query.AbstractCandidateLazyLoadList;
+import org.datanucleus.store.schema.table.Table;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
 import org.odftoolkit.odfdom.doc.table.OdfTable;
@@ -147,7 +148,8 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
             if (index >= first && index < last)
             {
                 // Object is of this candidate type, so find the object
-                String sheetName = ec.getStoreManager().getNamingFactory().getTableName(cmd);
+                Table table = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+                String sheetName = table.getIdentifier();
                 OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
                 List<OdfTableRow> rows = worksheet.getRowList();
                 int current = first;
@@ -166,7 +168,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                         if (current == index)
                         {
                             // This row equates to the required index
-                            final FieldManager fm = new FetchFieldManager(ec, cmd, row);
+                            final FieldManager fm = new FetchFieldManager(ec, cmd, row, table);
                             if (cmd.getIdentityType() == IdentityType.APPLICATION)
                             {
                                 Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, cmd, null, false, fm);
@@ -188,7 +190,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                             }
                             else if (cmd.getIdentityType() == IdentityType.DATASTORE)
                             {
-                                int idIndex = ODFUtils.getColumnPositionForFieldOfClass(cmd, -1);
+                                int idIndex = table.getDatastoreIdColumn().getPosition();
                                 OdfTableCell idCell = row.getCellByIndex(idIndex);
                                 Object idKey = null;
                                 if (ODFUtils.isOfficeValueTypeConsistent(idCell, OfficeValueTypeAttribute.Value.STRING))

@@ -27,9 +27,7 @@ import java.util.Map;
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.FetchPlan;
-import org.datanucleus.NucleusContext;
 import org.datanucleus.exceptions.NucleusDataStoreException;
-import org.datanucleus.exceptions.NucleusException;
 import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.identity.OID;
@@ -37,20 +35,15 @@ import org.datanucleus.identity.OIDFactory;
 import org.datanucleus.identity.SCOID;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
-import org.datanucleus.metadata.ColumnMetaData;
-import org.datanucleus.metadata.EmbeddedMetaData;
-import org.datanucleus.metadata.IdentityMetaData;
 import org.datanucleus.metadata.IdentityType;
-import org.datanucleus.metadata.MetaDataManager;
-import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
-import org.datanucleus.metadata.VersionMetaData;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
-import org.datanucleus.store.schema.naming.ColumnType;
+import org.datanucleus.store.schema.table.Column;
+import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
@@ -85,7 +78,8 @@ public class ODFUtils
     {
         ExecutionContext ec = op.getExecutionContext();
         final AbstractClassMetaData cmd = op.getClassMetaData();
-        String sheetName = ec.getStoreManager().getNamingFactory().getTableName(cmd);
+        Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+        String sheetName = schemaTable.getIdentifier();
         OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table == null)
         {
@@ -115,13 +109,16 @@ public class ODFUtils
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
                     {
-                        pkFieldColList.add(getColumnPositionForFieldOfEmbeddedClass(j, mmd));
+                        List<AbstractMemberMetaData> embMmds = new ArrayList();
+                        embMmds.add(mmd);
+                        embMmds.add(embCmd.getMetaDataForManagedMemberAtAbsolutePosition(j));
+                        pkFieldColList.add(schemaTable.getMemberColumnMappingForEmbeddedMember(embMmds).getColumn(0).getPosition());
                         pkFieldValList.add(embOP.provideField(j));
                     }
                 }
                 else
                 {
-                    pkFieldColList.add(getColumnPositionForFieldOfClass(cmd, pkFieldNumbers[i]));
+                    pkFieldColList.add(schemaTable.getMemberColumnMappingForMember(mmd).getColumn(0).getPosition());
                     pkFieldValList.add(fieldValue);
                 }
             }
@@ -154,7 +151,7 @@ public class ODFUtils
         {
             OID oid = (OID)op.getInternalObjectId();
             Object key = oid.getKeyValue();
-            int index = getColumnPositionForFieldOfClass(cmd, -1);
+            int index = schemaTable.getDatastoreIdColumn().getPosition();
             List<OdfTableRow> rows = table.getRowList();
             Iterator<OdfTableRow> rowIter = rows.iterator();
             while (rowIter.hasNext())
@@ -207,13 +204,16 @@ public class ODFUtils
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
                     {
-                        fieldColList.add(getColumnPositionForFieldOfEmbeddedClass(j, mmd));
+                        List<AbstractMemberMetaData> embMmds = new ArrayList();
+                        embMmds.add(mmd);
+                        embMmds.add(embCmd.getMetaDataForManagedMemberAtAbsolutePosition(j));
+                        fieldColList.add(schemaTable.getMemberColumnMappingForEmbeddedMember(embMmds).getColumn(0).getPosition());
                         fieldValList.add(embOP.provideField(j));
                     }
                 }
                 else if (relationType == RelationType.NONE)
                 {
-                    fieldColList.add(getColumnPositionForFieldOfClass(cmd, fieldNumbers[i]));
+                    fieldColList.add(schemaTable.getMemberColumnMappingForMember(mmd).getColumn(0).getPosition());
                     fieldValList.add(fieldValue);
                 }
             }
@@ -295,186 +295,6 @@ public class ODFUtils
     }
 
     /**
-     * Convenience method to get the position where a field of a class is persisted.
-     * Uses the column "position" attribute if defined, otherwise uses the column name (as an integer).
-     * The field number is the absolute number (0 or higher); a value of -1 implies surrogate identity column,
-     * and -2 implies surrogate version column
-     * @param cmd MetaData for the class
-     * @param inputFieldNumber Absolute field number that we are interested in (-1 = datastore-id, -2=version)
-     */
-    public static int getColumnPositionForFieldOfClass(AbstractClassMetaData cmd, int inputFieldNumber)
-    {
-        int fieldNumber = inputFieldNumber;
-        if (inputFieldNumber == -1)
-        {
-            // Datastore-identity, so allocate next column after normal fields
-            fieldNumber = cmd.getNoOfManagedMembers() + cmd.getNoOfInheritedManagedMembers();
-        }
-        else if (inputFieldNumber == -2)
-        {
-            // Version, so allocate next column after normal fields (and optionally datastore-identity)
-            if (cmd.getIdentityType() == IdentityType.DATASTORE)
-            {
-                fieldNumber = cmd.getNoOfManagedMembers() + cmd.getNoOfInheritedManagedMembers() + 1;
-            }
-            else
-            {
-                fieldNumber = cmd.getNoOfManagedMembers() + cmd.getNoOfInheritedManagedMembers();
-            }
-        }
-
-        if (inputFieldNumber >= 0)
-        {
-            // Field of the class
-            AbstractMemberMetaData ammd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
-            Integer colPos = (ammd.getColumnMetaData() == null || ammd.getColumnMetaData().length == 0 ? 
-                    null : ammd.getColumnMetaData()[0].getPosition());
-            if (colPos == null)
-            {
-                ColumnMetaData[] colmds = ammd.getColumnMetaData();
-                if (colmds != null && colmds.length > 0)
-                {
-                    String colName = colmds[0].getName();
-                    try
-                    {
-                        return Integer.valueOf(colName).intValue();
-                    }
-                    catch (NumberFormatException nfe)
-                    {
-                        return (int)fieldNumber;
-                    }
-                }
-                else
-                {
-                    return (int)fieldNumber;
-                }
-            }
-            else
-            {
-                return colPos.intValue();
-            }
-        }
-        else if (inputFieldNumber == -1)
-        {
-            // Surrogate datastore identity column
-            IdentityMetaData imd = cmd.getIdentityMetaData();
-            if (imd != null)
-            {
-                Integer colPos = (imd.getColumnMetaData() == null ? null : imd.getColumnMetaData().getPosition());
-                if (colPos == null)
-                {
-                    if (imd.getColumnMetaData() != null)
-                    {
-                        String colName = imd.getColumnMetaData().getName();
-                        try
-                        {
-                            return Integer.valueOf(colName).intValue();
-                        }
-                        catch (NumberFormatException nfe)
-                        {
-                            return (int)fieldNumber;
-                        }
-                    }
-                    else
-                    {
-                        return (int)fieldNumber;
-                    }
-                }
-                else
-                {
-                    return colPos.intValue();
-                }
-            }
-            return -1;
-        }
-        else if (inputFieldNumber == -2)
-        {
-            // Surrogate version column
-            VersionMetaData vmd = cmd.getVersionMetaDataForClass();
-            if (vmd != null)
-            {
-                Integer colPos = (vmd.getColumnMetaData() == null ? null : vmd.getColumnMetaData().getPosition());
-                if (colPos == null)
-                {
-                    if (vmd.getColumnMetaData() != null)
-                    {
-                        String colName = vmd.getColumnMetaData().getName();
-                        try
-                        {
-                            return Integer.valueOf(colName);
-                        }
-                        catch (NumberFormatException nfe)
-                        {
-                            return (int)fieldNumber;
-                        }
-                    }
-                    else
-                    {
-                        return (int)fieldNumber;
-                    }
-                }
-                else
-                {
-                    return colPos.intValue();
-                }
-            }
-            return -1;
-        }
-        else
-        {
-            throw new NucleusException("Unsupported field number " + fieldNumber);
-        }
-    }
-
-    /**
-     * Return the column position for the specified field of an embedded object stored in the specified owner field.
-     * Uses the column "position" attribute if defined, otherwise uses the column name (as an integer).
-     * @param fieldNumber Number of the field in the embedded class.
-     * @param ownerMmd the owner field
-     * @return The column position
-     */
-    public static int getColumnPositionForFieldOfEmbeddedClass(int fieldNumber, 
-            AbstractMemberMetaData ownerMmd)
-    {
-        if (fieldNumber >= 0)
-        {
-            EmbeddedMetaData emd = ownerMmd.getEmbeddedMetaData();
-            AbstractMemberMetaData[] emb_mmd = emd.getMemberMetaData();
-            AbstractMemberMetaData ammd = emb_mmd[fieldNumber];
-            Integer colPos = (ammd.getColumnMetaData() == null || ammd.getColumnMetaData().length == 0 ?
-                    null : ammd.getColumnMetaData()[0].getPosition());
-            if (colPos == null)
-            {
-                ColumnMetaData[] colmds = ammd.getColumnMetaData();
-                if (colmds != null && colmds.length > 0)
-                {
-                    String colName = colmds[0].getName();
-                    try
-                    {
-                        return Integer.valueOf(colName).intValue();
-                    }
-                    catch (NumberFormatException nfe)
-                    {
-                        return (int)fieldNumber;
-                    }
-                }
-                else
-                {
-                    return (int)fieldNumber;
-                }
-            }
-            else
-            {
-                return colPos;
-            }
-        }
-        else
-        {
-            throw new NucleusException("Unsupported field number " + fieldNumber + " of owner "+ ownerMmd.getFullFieldName());
-        }
-    }
-
-    /**
      * Convenience method to get all objects of the candidate type (and optional subclasses) from the 
      * specified workbook connection.
      * @param ec execution context
@@ -529,7 +349,8 @@ public class ODFUtils
     {
         List results = new ArrayList();
 
-        String sheetName = ec.getStoreManager().getNamingFactory().getTableName(acmd);
+        final Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(acmd.getFullClassName()).getProperty("tableObject");
+        String sheetName = schemaTable.getIdentifier();
         final OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table != null)
         {
@@ -538,7 +359,7 @@ public class ODFUtils
             while (rowIter.hasNext())
             {
                 final OdfTableRow row = rowIter.next();
-                final FetchFieldManager fm = new FetchFieldManager(ec, acmd, row);
+                final FetchFieldManager fm = new FetchFieldManager(ec, acmd, row, schemaTable);
                 OdfStyle style = row.getDefaultCellStyle();
                 String styleName = (style != null ? style.getStyleNameAttribute() : null);
                 if (styleName != null && styleName.equals("DN_Headers"))
@@ -549,8 +370,8 @@ public class ODFUtils
 
                 if (acmd.getIdentityType() == IdentityType.APPLICATION)
                 {
-                    Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false, 
-                        new FetchFieldManager(ec, acmd, row));
+                    Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false, // TODO Use "fm" from above
+                        new FetchFieldManager(ec, acmd, row, schemaTable));
                     results.add(ec.findObject(id, new FieldValues()
                     {
                         // ObjectProvider calls the fetchFields method
@@ -570,7 +391,7 @@ public class ODFUtils
                 }
                 else if (acmd.getIdentityType() == IdentityType.DATASTORE)
                 {
-                    int idIndex = ODFUtils.getColumnPositionForFieldOfClass(acmd, -1);
+                    int idIndex = schemaTable.getDatastoreIdColumn().getPosition();
                     OdfTableCell idCell = row.getCellByIndex(idIndex);
                     Object idKey = null;
                     if (isOfficeValueTypeConsistent(idCell, OfficeValueTypeAttribute.Value.STRING))
@@ -606,11 +427,11 @@ public class ODFUtils
                     {
                         public void fetchFields(ObjectProvider sm)
                         {
-                            sm.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row));
+                            sm.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
                         }
                         public void fetchNonLoadedFields(ObjectProvider sm)
                         {
-                            sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row));
+                            sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
                         }
                         public FetchPlan getFetchPlanForLoading()
                         {
@@ -642,8 +463,7 @@ public class ODFUtils
      * @param storeMgr StoreManager being used
      * @return The table
      */
-    public static OdfTable addTableForClass(OdfSpreadsheetDocument doc, AbstractClassMetaData cmd, String sheetName, 
-            StoreManager storeMgr)
+    public static OdfTable addTableForClass(OdfSpreadsheetDocument doc, AbstractClassMetaData cmd, Table schemaTable, StoreManager storeMgr)
     {
         OdfFileDom contentDoc;
         try
@@ -652,21 +472,25 @@ public class ODFUtils
         }
         catch (Exception e)
         {
-            throw new NucleusDataStoreException("Exception thrown adding worksheet " + sheetName, e);
+            throw new NucleusDataStoreException("Exception thrown adding worksheet " + schemaTable.getIdentifier(), e);
         }
         OdfOfficeAutomaticStyles styles = contentDoc.getAutomaticStyles();
         OdfStyle headerStyle = styles.getStyle("DN_Headers", OdfStyleFamily.TableCell);
 
-        Map<Integer, String> colNameByPosition = new HashMap<Integer, String>();
-        getColumnInformationForClass(colNameByPosition, cmd, storeMgr);
-        int numCols = colNameByPosition.size();
-
-        OdfTable table = OdfTable.newTable(doc, 1, numCols);
-        table.setTableName(sheetName);
+        OdfTable table = OdfTable.newTable(doc, 1, schemaTable.getNumberOfColumns());
+        table.setTableName(schemaTable.getIdentifier());
 
         // Set the header row if required TODO Make this optional when ODFDOM allows tables with no rows/columns
         if (true)
         {
+            Map<Integer, String> colNameByPosition = new HashMap<Integer, String>();
+            List<Column> schemaCols = schemaTable.getColumns();
+            for (Column schemaCol : schemaCols)
+            {
+                colNameByPosition.put(schemaCol.getPosition(), schemaCol.getIdentifier());
+            }
+            int numCols = colNameByPosition.size();
+
             OdfTableRow headerRow = table.getRowByIndex(0);
             headerRow.setDefaultCellStyle(headerStyle);
             Iterator<Map.Entry<Integer, String>> colIter = colNameByPosition.entrySet().iterator();
@@ -689,101 +513,9 @@ public class ODFUtils
 
         if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
         {
-            NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER.msg("ODF.Insert.SheetCreated", sheetName));
+            NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER.msg("ODF.Insert.SheetCreated", schemaTable.getIdentifier()));
         }
 
         return table;
-    }
-
-    protected static void getColumnInformationForClass(Map<Integer, String> colNameByPosition, 
-            AbstractClassMetaData cmd, StoreManager storeMgr)
-    {
-        NucleusContext nucCtx = storeMgr.getNucleusContext();
-        MetaDataManager mmgr = nucCtx.getMetaDataManager();
-        ClassLoaderResolver clr = nucCtx.getClassLoaderResolver(null);
-        int numFields = cmd.getAllMemberPositions().length;
-        for (int i=0;i<numFields;i++)
-        {
-            AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(i);
-            RelationType relationType = mmd.getRelationType(clr);
-            if (RelationType.isRelationSingleValued(relationType) && MetaDataUtils.getInstance().isMemberEmbedded(mmgr, clr, mmd, relationType, null))
-            {
-                AbstractClassMetaData relCmd = mmgr.getMetaDataForClass(mmd.getType(), clr);
-                getColumnInformationForEmbeddedClass(colNameByPosition, relCmd, mmd, clr, mmgr, storeMgr);
-            }
-            else
-            {
-                int index = ODFUtils.getColumnPositionForFieldOfClass(cmd, i);
-                String name = storeMgr.getNamingFactory().getColumnName(mmd, ColumnType.COLUMN);
-                String oldName = colNameByPosition.put(index, name);
-                if (oldName != null)
-                {
-                    throw new NucleusUserException("Error assigning positions of columns in ODF." +
-                        " Position=" + index + " was previously assigned to column with name=" + oldName +
-                        " but now is for name=" + name +
-                        " Check your metadata specification of positions");
-                }
-            }
-        }
-        if (cmd.getIdentityType() == IdentityType.DATASTORE)
-        {
-            int index = ODFUtils.getColumnPositionForFieldOfClass(cmd, -1);
-            String name = storeMgr.getNamingFactory().getColumnName(cmd, ColumnType.DATASTOREID_COLUMN);
-            String oldName = colNameByPosition.put(index, name);
-            if (oldName != null)
-            {
-                throw new NucleusUserException("Error assigning positions of columns in ODF." +
-                    " Position=" + index + " was previously assigned to column with name=" + oldName +
-                    " but now is for name=" + name +
-                    " Check your metadata specification of positions");
-            }
-        }
-        if (cmd.isVersioned())
-        {
-            int index = ODFUtils.getColumnPositionForFieldOfClass(cmd, -2);
-            String name = storeMgr.getNamingFactory().getColumnName(cmd, ColumnType.VERSION_COLUMN);
-            String oldName = colNameByPosition.put(index, name);
-            if (oldName != null)
-            {
-                throw new NucleusUserException("Error assigning positions of columns in ODF." +
-                    " Position=" + index + " was previously assigned to column with name=" + oldName +
-                    " but now is for name=" + name +
-                    " Check your metadata specification of positions");
-            }
-        }
-    }
-
-    protected static void getColumnInformationForEmbeddedClass(Map<Integer, String> colNameByPosition, 
-            AbstractClassMetaData cmd, AbstractMemberMetaData ownerMmd, ClassLoaderResolver clr, MetaDataManager mmgr,
-            StoreManager storeMgr)
-    {
-        EmbeddedMetaData emd = ownerMmd.getEmbeddedMetaData();
-        AbstractMemberMetaData[] emb_mmd = emd.getMemberMetaData();
-        for (int i=0;i<emb_mmd.length;i++)
-        {
-            AbstractMemberMetaData mmd = cmd.getMetaDataForMember(emb_mmd[i].getName());
-            if (emb_mmd[i].getEmbeddedMetaData() == null)
-            {
-                int index = ODFUtils.getColumnPositionForFieldOfEmbeddedClass(mmd.getAbsoluteFieldNumber(), ownerMmd);
-                String name = storeMgr.getNamingFactory().getColumnName(emb_mmd[i], ColumnType.COLUMN);
-                String oldName = colNameByPosition.put(index, name);
-                if (oldName != null)
-                {
-                    throw new NucleusUserException("Error assigning positions of columns in ODF." +
-                        " Position=" + index + " was previously assigned to column with name=" + oldName +
-                        " but now is for name=" + name +
-                        " Check your metadata specification of positions");
-                }
-            }
-            else
-            {
-                RelationType relationType = mmd.getRelationType(clr);
-                if (RelationType.isRelationSingleValued(relationType)) // TODO Use MetaDataUtils.isEmbedded(...)?
-                {
-                    AbstractClassMetaData relCmd = mmgr.getMetaDataForClass(emb_mmd[i].getType(), clr);
-                    getColumnInformationForEmbeddedClass(colNameByPosition, relCmd, emb_mmd[i], clr, mmgr, storeMgr);
-                }
-            }
-        }
     }
 }
