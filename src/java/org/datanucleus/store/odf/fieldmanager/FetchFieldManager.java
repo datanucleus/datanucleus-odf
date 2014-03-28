@@ -41,7 +41,6 @@ import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.store.types.converters.TypeConverter;
-import org.datanucleus.store.types.converters.TypeConverterHelper;
 import org.datanucleus.store.fieldmanager.AbstractFetchFieldManager;
 import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.types.SCOUtils;
@@ -49,6 +48,7 @@ import org.datanucleus.util.Base64;
 import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
+import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
 
 /**
  * FieldManager for the fetch of fields from ODF.
@@ -228,241 +228,83 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             }
         }
 
-        return fetchObjectFieldFromCell(fieldNumber, mmd, clr, relationType);
+        return fetchObjectFieldInternal(fieldNumber, mmd, clr, relationType);
     }
 
-    protected Object fetchObjectFieldFromCell(int fieldNumber, AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
+    protected Object fetchObjectFieldInternal(int fieldNumber, AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
     {
-        OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
+        MemberColumnMapping mapping = getColumnMapping(fieldNumber);
+
         if (relationType == RelationType.NONE)
         {
-            Class type = mmd.getType();
             Object value = null;
-            if (mmd.getTypeConverterName() != null)
+            if (mapping.getTypeConverter() != null)
             {
                 TypeConverter conv = ec.getNucleusContext().getTypeManager().getTypeConverterForName(mmd.getTypeConverterName());
-                Class datastoreType = TypeConverterHelper.getDatastoreTypeForTypeConverter(conv, mmd.getType());
-                if (datastoreType == String.class)
+                if (mapping.getNumberOfColumns() > 1)
                 {
-                    value = conv.toMemberType(cell.getStringValue());
-                }
-                else if (Number.class.isAssignableFrom(datastoreType))
-                {
-                    value = conv.toMemberType(cell.getDoubleValue());
-                }
-                else if (Boolean.class.isAssignableFrom(datastoreType))
-                {
-                    value = conv.toMemberType(cell.getBooleanValue());
-                }
-                else if (java.sql.Time.class.isAssignableFrom(datastoreType))
-                {
-                    value = conv.toMemberType(cell.getTimeValue());
-                }
-                else if (Date.class.isAssignableFrom(datastoreType))
-                {
-                    value = conv.toMemberType(cell.getDateValue());
-                }
-            }
-            else if (type == Boolean.class)
-            {
-                if (cell.getBooleanValue() == null)
-                {
-                    return null;
-                }
-                value = cell.getBooleanValue();
-            }
-            else if (type == Byte.class)
-            {
-                if (cell.getDoubleValue() == null)
-                {
-                    return null;
-                }
-                value = cell.getDoubleValue().byteValue();
-            }
-            else if (type == Character.class)
-            {
-                if (cell.getStringValue() == null)
-                {
-                    return null;
-                }
-                value = cell.getStringValue().charAt(0);
-            }
-            else if (type == Double.class)
-            {
-                if (cell.getDoubleValue() == null)
-                {
-                    return null;
-                }
-                value = cell.getDoubleValue();
-            }
-            else if (type == Float.class)
-            {
-                if (cell.getDoubleValue() == null)
-                {
-                    return null;
-                }
-                value = Float.valueOf(cell.getDoubleValue().floatValue());
-            }
-            else if (type == Integer.class)
-            {
-                if (cell.getDoubleValue() == null)
-                {
-                    return null;
-                }
-                value = Integer.valueOf(cell.getDoubleValue().intValue());
-            }
-            else if (type == Long.class)
-            {
-                if (cell.getDoubleValue() == null)
-                {
-                    return null;
-                }
-                value = Long.valueOf(cell.getDoubleValue().longValue());
-            }
-            else if (type == Short.class)
-            {
-                if (cell.getDoubleValue() == null)
-                {
-                    return null;
-                }
-                value = Short.valueOf(cell.getDoubleValue().shortValue());
-            }
-            else if (type == Calendar.class)
-            {
-                if (cell.getDateValue() == null)
-                {
-                    return null;
-                }
-                value = cell.getDateValue();
-            }
-            else if (java.sql.Date.class.isAssignableFrom(type))
-            {
-                if (cell.getDateValue() == null)
-                {
-                    return null;
-                }
-                value = new java.sql.Date(cell.getDateValue().getTime().getTime());
-            }
-            else if (java.sql.Time.class.isAssignableFrom(type))
-            {
-                if (cell.getTimeValue() == null)
-                {
-                    return null;
-                }
-                value = new java.sql.Time(cell.getTimeValue().getTime().getTime());
-            }
-            else if (java.sql.Timestamp.class.isAssignableFrom(type))
-            {
-                if (cell.getDateValue() == null)
-                {
-                    return null;
-                }
-                value = new java.sql.Timestamp(cell.getDateValue().getTime().getTime());
-            }
-            else if (Date.class.isAssignableFrom(type))
-            {
-                if (cell.getDateValue() == null)
-                {
-                    return null;
-                }
-                Calendar cal = cell.getDateValue();
-                value = cal.getTime();
-            }
-            else if (type == Currency.class)
-            {
-                if (cell.getStringValue() == null)
-                {
-                    return null;
-                }
-                TypeConverter conv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
-                value = conv.toMemberType(cell.getStringValue());
-            }
-            else if (Enum.class.isAssignableFrom(type))
-            {
-                ColumnMetaData colmd = null;
-                if (mmd.getColumnMetaData() != null && mmd.getColumnMetaData().length > 0)
-                {
-                    colmd = mmd.getColumnMetaData()[0];
-                }
-                boolean useLong = MetaDataUtils.persistColumnAsNumeric(colmd);
-                if (useLong)
-                {
-                    Double cellValue = cell.getDoubleValue();
-                    if (cellValue != null)
+                    // TODO Cater for int array etc
+                    Object[] values = new Object[mapping.getNumberOfColumns()];
+                    for (int i=0;i<mapping.getNumberOfColumns();i++)
                     {
-                        value = mmd.getType().getEnumConstants()[(int)cellValue.longValue()];
+                        OdfTableCell cell = row.getCellByIndex(mapping.getColumn(i).getPosition());
+                        String cellValueType = cell.getValueType();
+                        // TODO Cater for other types (in the datastore we only have these types, but they may need updating as per getMemberValueFromCell
+                        if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
+                        {
+                            values[i] = conv.toMemberType(cell.getBooleanValue());
+                        }
+                        else if (cellValueType.equals(OfficeValueTypeAttribute.Value.STRING.toString()))
+                        {
+                            values[i] = conv.toMemberType(cell.getStringValue());
+                        }
+                        else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
+                        {
+                            values[i] = conv.toMemberType(cell.getDoubleValue());
+                        }
+                        else if (cellValueType.equals(OfficeValueTypeAttribute.Value.DATE.toString()))
+                        {
+                            values[i] = conv.toMemberType(cell.getDateValue());
+                        }
+                        else if (cellValueType.equals(OfficeValueTypeAttribute.Value.TIME.toString()))
+                        {
+                            values[i] = conv.toMemberType(cell.getTimeValue());
+                        }
                     }
-                    else
-                    {
-                        return null;
-                    }
+                    value = conv.toMemberType(values);
                 }
                 else
                 {
-                    String cellValue = cell.getStringValue();
-                    if (cellValue != null && cellValue.length() > 0)
+                    OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
+                    String cellValueType = cell.getValueType();
+                    if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
                     {
-                        value = Enum.valueOf(type, cell.getStringValue());
+                        value = conv.toMemberType(cell.getBooleanValue());
                     }
-                    else
+                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.STRING.toString()))
                     {
-                        return null;
+                        value = conv.toMemberType(cell.getStringValue());
                     }
-                }
-            }
-            else if (byte[].class == type)
-            {
-                String cellValue = cell.getStringValue();
-                if (cellValue != null && cellValue.length() > 0)
-                {
-                    value = Base64.decode(cellValue);
+                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
+                    {
+                        value = conv.toMemberType(cell.getDoubleValue());
+                    }
+                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.DATE.toString()))
+                    {
+                        value = conv.toMemberType(cell.getDateValue());
+                    }
+                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.TIME.toString()))
+                    {
+                        value = conv.toMemberType(cell.getTimeValue());
+                    }
                 }
             }
             else
             {
-                boolean useLong = false;
-                ColumnMetaData[] colmds = mmd.getColumnMetaData();
-                if (colmds != null && colmds.length == 1)
-                {
-                    String jdbc = colmds[0].getJdbcType();
-                    if (jdbc != null && (jdbc.equalsIgnoreCase("int") || jdbc.equalsIgnoreCase("integer")))
-                    {
-                        useLong = true;
-                    }
-                }
-
-                // TODO Make use of default TypeConverter for a type before falling back to String/Long
-                TypeConverter strConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
-                TypeConverter longConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
-                if (useLong && longConv != null)
-                {
-                    value = longConv.toMemberType(cell.getDoubleValue().longValue());
-                }
-                else if (!useLong && strConv != null)
-                {
-                    String cellValue = cell.getStringValue();
-                    if (cellValue != null && cellValue.length() > 0)
-                    {
-                        value = strConv.toMemberType(cell.getStringValue());
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
-                else if (!useLong && longConv != null)
-                {
-                    value = longConv.toMemberType(cell.getDoubleValue().longValue());
-                }
-                else
-                {
-                    // Not supported as String so just set to null
-                    NucleusLogger.PERSISTENCE.warn("Field " + mmd.getFullFieldName() + 
-                    " could not be set in the object since it is not persistable to ODF");
-                    return null;
-                }
+                OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
+                value = getMemberValueFromCell(mapping, 0, cell);
             }
-            if (op != null)
+            if (op != null && value != null)
             {
                 return op.wrapSCOField(fieldNumber, value, false, false, true);
             }
@@ -471,6 +313,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         else if (RelationType.isRelationSingleValued(relationType))
         {
             // Persistable object - retrieve the string form of the identity, and find the object
+            OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
             String idStr = cell.getStringValue();
             if (idStr == null)
             {
@@ -502,6 +345,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         else if (RelationType.isRelationMultiValued(relationType))
         {
             // Collection/Map/Array
+            OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
             String cellStr = cell.getStringValue();
             if (cellStr == null)
             {
@@ -699,5 +543,212 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         {
             throw new NucleusException("Dont currently support retrieval of type " + mmd.getTypeName() + " from ODF");
         }
+    }
+
+    protected Object getMemberValueFromCell(MemberColumnMapping mapping, int pos, OdfTableCell cell)
+    {
+        Object value = null;
+        Class type = mapping.getMemberMetaData().getType();
+        AbstractMemberMetaData mmd = mapping.getMemberMetaData();
+        if (type == Boolean.class)
+        {
+            if (cell.getBooleanValue() == null)
+            {
+                return null;
+            }
+            value = cell.getBooleanValue();
+        }
+        else if (type == Byte.class)
+        {
+            if (cell.getDoubleValue() == null)
+            {
+                return null;
+            }
+            value = cell.getDoubleValue().byteValue();
+        }
+        else if (type == Character.class)
+        {
+            if (cell.getStringValue() == null)
+            {
+                return null;
+            }
+            value = cell.getStringValue().charAt(0);
+        }
+        else if (type == Double.class)
+        {
+            if (cell.getDoubleValue() == null)
+            {
+                return null;
+            }
+            value = cell.getDoubleValue();
+        }
+        else if (type == Float.class)
+        {
+            if (cell.getDoubleValue() == null)
+            {
+                return null;
+            }
+            value = Float.valueOf(cell.getDoubleValue().floatValue());
+        }
+        else if (type == Integer.class)
+        {
+            if (cell.getDoubleValue() == null)
+            {
+                return null;
+            }
+            value = Integer.valueOf(cell.getDoubleValue().intValue());
+        }
+        else if (type == Long.class)
+        {
+            if (cell.getDoubleValue() == null)
+            {
+                return null;
+            }
+            value = Long.valueOf(cell.getDoubleValue().longValue());
+        }
+        else if (type == Short.class)
+        {
+            if (cell.getDoubleValue() == null)
+            {
+                return null;
+            }
+            value = Short.valueOf(cell.getDoubleValue().shortValue());
+        }
+        else if (type == Calendar.class)
+        {
+            if (cell.getDateValue() == null)
+            {
+                return null;
+            }
+            value = cell.getDateValue();
+        }
+        else if (java.sql.Date.class.isAssignableFrom(type))
+        {
+            if (cell.getDateValue() == null)
+            {
+                return null;
+            }
+            value = new java.sql.Date(cell.getDateValue().getTime().getTime());
+        }
+        else if (java.sql.Time.class.isAssignableFrom(type))
+        {
+            if (cell.getTimeValue() == null)
+            {
+                return null;
+            }
+            value = new java.sql.Time(cell.getTimeValue().getTime().getTime());
+        }
+        else if (java.sql.Timestamp.class.isAssignableFrom(type))
+        {
+            if (cell.getDateValue() == null)
+            {
+                return null;
+            }
+            value = new java.sql.Timestamp(cell.getDateValue().getTime().getTime());
+        }
+        else if (Date.class.isAssignableFrom(type))
+        {
+            if (cell.getDateValue() == null)
+            {
+                return null;
+            }
+            Calendar cal = cell.getDateValue();
+            value = cal.getTime();
+        }
+        else if (type == Currency.class)
+        {
+            if (cell.getStringValue() == null)
+            {
+                return null;
+            }
+            TypeConverter conv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
+            value = conv.toMemberType(cell.getStringValue());
+        }
+        else if (Enum.class.isAssignableFrom(type))
+        {
+            ColumnMetaData colmd = null;
+            if (mmd.getColumnMetaData() != null && mmd.getColumnMetaData().length > 0)
+            {
+                colmd = mmd.getColumnMetaData()[0];
+            }
+            boolean useLong = MetaDataUtils.persistColumnAsNumeric(colmd);
+            if (useLong)
+            {
+                Double cellValue = cell.getDoubleValue();
+                if (cellValue != null)
+                {
+                    value = mmd.getType().getEnumConstants()[(int)cellValue.longValue()];
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                String cellValue = cell.getStringValue();
+                if (cellValue != null && cellValue.length() > 0)
+                {
+                    value = Enum.valueOf(type, cell.getStringValue());
+                }
+                else
+                {
+                    return null;
+                }
+            }
+        }
+        else if (byte[].class == type)
+        {
+            String cellValue = cell.getStringValue();
+            if (cellValue != null && cellValue.length() > 0)
+            {
+                value = Base64.decode(cellValue);
+            }
+        }
+        else
+        {
+            boolean useLong = false;
+            ColumnMetaData[] colmds = mmd.getColumnMetaData();
+            if (colmds != null && colmds.length == 1)
+            {
+                String jdbc = colmds[0].getJdbcType();
+                if (jdbc != null && (jdbc.equalsIgnoreCase("int") || jdbc.equalsIgnoreCase("integer")))
+                {
+                    useLong = true;
+                }
+            }
+
+            // TODO Make use of default TypeConverter for a type before falling back to String/Long
+            TypeConverter strConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
+            TypeConverter longConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
+            if (useLong && longConv != null)
+            {
+                value = longConv.toMemberType(cell.getDoubleValue().longValue());
+            }
+            else if (!useLong && strConv != null)
+            {
+                String cellValue = cell.getStringValue();
+                if (cellValue != null && cellValue.length() > 0)
+                {
+                    value = strConv.toMemberType(cell.getStringValue());
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else if (!useLong && longConv != null)
+            {
+                value = longConv.toMemberType(cell.getDoubleValue().longValue());
+            }
+            else
+            {
+                // Not supported as String so just set to null
+                NucleusLogger.PERSISTENCE.warn("Field " + mmd.getFullFieldName() + 
+                " could not be set in the object since it is not persistable to ODF");
+                return null;
+            }
+        }
+        return value;
     }
 }

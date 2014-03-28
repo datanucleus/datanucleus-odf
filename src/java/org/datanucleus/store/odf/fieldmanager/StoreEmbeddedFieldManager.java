@@ -135,6 +135,6 @@ public class StoreEmbeddedFieldManager extends StoreFieldManager
             }
         }
 
-        storeObjectFieldInCell(fieldNumber, value, mmd, clr, relationType);
+        storeObjectFieldInternal(fieldNumber, value, mmd, clr, relationType);
     }
 }
