@@ -252,23 +252,23 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                         // TODO Cater for other types (in the datastore we only have these types, but they may need updating as per getMemberValueFromCell
                         if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
                         {
-                            values[i] = conv.toMemberType(cell.getBooleanValue());
+                            values[i] = cell.getBooleanValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.STRING.toString()))
                         {
-                            values[i] = conv.toMemberType(cell.getStringValue());
+                            values[i] = cell.getStringValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
                         {
-                            values[i] = conv.toMemberType(cell.getDoubleValue());
+                            values[i] = cell.getDoubleValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.DATE.toString()))
                         {
-                            values[i] = conv.toMemberType(cell.getDateValue());
+                            values[i] = cell.getDateValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.TIME.toString()))
                         {
-                            values[i] = conv.toMemberType(cell.getTimeValue());
+                            values[i] = cell.getTimeValue();
                         }
                     }
                     value = conv.toMemberType(values);
