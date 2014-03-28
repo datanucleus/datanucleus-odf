@@ -17,26 +17,45 @@ Contributors:
 **********************************************************************/
 package org.datanucleus.store.odf;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
 import org.datanucleus.ClassLoaderResolver;
+import org.datanucleus.exceptions.NucleusDataStoreException;
+import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.store.StoreData;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.schema.AbstractStoreSchemaHandler;
+import org.datanucleus.store.schema.table.Column;
 import org.datanucleus.store.schema.table.CompleteClassTable;
 import org.datanucleus.store.schema.table.Table;
+import org.datanucleus.util.Localiser;
+import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.doc.table.OdfTable;
+import org.odftoolkit.odfdom.doc.table.OdfTableCell;
+import org.odftoolkit.odfdom.doc.table.OdfTableRow;
+import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
+import org.odftoolkit.odfdom.dom.style.OdfStyleFamily;
+import org.odftoolkit.odfdom.incubator.doc.office.OdfOfficeAutomaticStyles;
+import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
+import org.odftoolkit.odfdom.pkg.OdfFileDom;
 
 /**
  * Handler for schema operations with ODF documents.
  */
 public class ODFSchemaHandler extends AbstractStoreSchemaHandler
 {
+    /** Localiser for messages. */
+    protected static final Localiser LOCALISER = Localiser.getInstance(
+        "org.datanucleus.store.odf.Localisation", ODFStoreManager.class.getClassLoader());
+
     public ODFSchemaHandler(StoreManager storeMgr)
     {
         super(storeMgr);
@@ -83,7 +102,39 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                     if (table == null)
                     {
                         // Table for this class doesn't exist yet so create
-                        table = ODFUtils.addTableForClass(spreadsheet, cmd, schemaTable, storeMgr);
+                        OdfFileDom contentDoc;
+                        try
+                        {
+                            contentDoc = spreadsheet.getContentDom();
+                        }
+                        catch (Exception e)
+                        {
+                            throw new NucleusDataStoreException("Exception thrown adding worksheet " + schemaTable.getIdentifier(), e);
+                        }
+                        OdfOfficeAutomaticStyles styles = contentDoc.getAutomaticStyles();
+                        OdfStyle headerStyle = styles.getStyle("DN_Headers", OdfStyleFamily.TableCell);
+
+                        table = OdfTable.newTable(spreadsheet, 1, schemaTable.getNumberOfColumns());
+                        table.setTableName(schemaTable.getIdentifier());
+
+                        // Set the header row if required TODO Make this optional when ODFDOM allows tables with no rows/columns
+                        if (true)
+                        {
+                            OdfTableRow headerRow = table.getRowByIndex(0);
+                            headerRow.setDefaultCellStyle(headerStyle);
+                            List<Column> schemaCols = schemaTable.getColumns(); // Columns are ordered already
+                            for (Column schemaCol : schemaCols)
+                            {
+                                OdfTableCell cell = headerRow.getCellByIndex(schemaCol.getPosition());
+                                cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
+                                cell.setStringValue(schemaCol.getIdentifier());
+                            }
+                        }
+
+                        if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
+                        {
+                            NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER.msg("ODF.Insert.SheetCreated", schemaTable.getIdentifier()));
+                        }
                     }
                 }
             }
@@ -95,6 +146,70 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 mconn.release();
             }
         }
+    }
+
+    /**
+     * Convenience method to add a table (worksheet) to represent a class.
+     * @param doc The spreadsheet doc
+     * @param cmd Metadata for the class
+     * @param sheetName Name of the sheet
+     * @param storeMgr StoreManager being used
+     * @return The table
+     */
+    public static OdfTable addTableForClass(OdfSpreadsheetDocument doc, AbstractClassMetaData cmd, Table schemaTable, StoreManager storeMgr)
+    {
+        OdfFileDom contentDoc;
+        try
+        {
+            contentDoc = doc.getContentDom();
+        }
+        catch (Exception e)
+        {
+            throw new NucleusDataStoreException("Exception thrown adding worksheet " + schemaTable.getIdentifier(), e);
+        }
+        OdfOfficeAutomaticStyles styles = contentDoc.getAutomaticStyles();
+        OdfStyle headerStyle = styles.getStyle("DN_Headers", OdfStyleFamily.TableCell);
+
+        OdfTable table = OdfTable.newTable(doc, 1, schemaTable.getNumberOfColumns());
+        table.setTableName(schemaTable.getIdentifier());
+
+        // Set the header row if required TODO Make this optional when ODFDOM allows tables with no rows/columns
+        if (true)
+        {
+            Map<Integer, String> colNameByPosition = new HashMap<Integer, String>();
+            List<Column> schemaCols = schemaTable.getColumns();
+            for (Column schemaCol : schemaCols)
+            {
+                colNameByPosition.put(schemaCol.getPosition(), schemaCol.getIdentifier());
+            }
+            int numCols = colNameByPosition.size();
+
+            OdfTableRow headerRow = table.getRowByIndex(0);
+            headerRow.setDefaultCellStyle(headerStyle);
+            Iterator<Map.Entry<Integer, String>> colIter = colNameByPosition.entrySet().iterator();
+            while (colIter.hasNext())
+            {
+                Map.Entry<Integer, String> entry = colIter.next();
+                int position = entry.getKey();
+                if (position >= numCols)
+                {
+                    throw new NucleusUserException("Error in specification of column positions." +
+                        " Class " + cmd.getFullClassName() + " has " + numCols + " in total" +
+                        " yet there is a column defined at position=" + position);
+                }
+                String colName = entry.getValue();
+                OdfTableCell cell = headerRow.getCellByIndex(position);
+                cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
+                cell.setStringValue(colName);
+            }
+        }
+
+        if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
+        {
+            NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER.msg("ODF.Insert.SheetCreated", schemaTable.getIdentifier()));
+        }
+
+        return table;
     }
 
     /* (non-Javadoc)
