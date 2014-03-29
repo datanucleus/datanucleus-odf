@@ -35,9 +35,11 @@ import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.ColumnMetaData;
+import org.datanucleus.metadata.JdbcType;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
+import org.datanucleus.store.schema.table.Column;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.store.types.converters.TypeConverter;
@@ -547,6 +549,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
 
     protected Object getMemberValueFromCell(MemberColumnMapping mapping, int pos, OdfTableCell cell)
     {
+        Column col = mapping.getColumn(pos);
         Object value = null;
         Class type = mapping.getMemberMetaData().getType();
         AbstractMemberMetaData mmd = mapping.getMemberMetaData();
@@ -708,11 +711,9 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         else
         {
             boolean useLong = false;
-            ColumnMetaData[] colmds = mmd.getColumnMetaData();
-            if (colmds != null && colmds.length == 1)
+            if (col.getJdbcType() != null)
             {
-                String jdbc = colmds[0].getJdbcType();
-                if (jdbc != null && (jdbc.equalsIgnoreCase("int") || jdbc.equalsIgnoreCase("integer")))
+                if (col.getJdbcType() == JdbcType.INTEGER || col.getJdbcType() == JdbcType.BIGINT || col.getJdbcType() == JdbcType.SMALLINT || col.getJdbcType() == JdbcType.TINYINT)
                 {
                     useLong = true;
                 }
