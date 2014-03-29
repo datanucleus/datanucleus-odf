@@ -34,8 +34,6 @@ import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
-import org.datanucleus.metadata.ColumnMetaData;
-import org.datanucleus.metadata.JdbcType;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
@@ -669,12 +667,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         }
         else if (Enum.class.isAssignableFrom(type))
         {
-            ColumnMetaData colmd = null;
-            if (mmd.getColumnMetaData() != null && mmd.getColumnMetaData().length > 0)
-            {
-                colmd = mmd.getColumnMetaData()[0];
-            }
-            boolean useLong = MetaDataUtils.persistColumnAsNumeric(colmd);
+            boolean useLong = MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType());
             if (useLong)
             {
                 Double cellValue = cell.getDoubleValue();
@@ -710,16 +703,8 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         }
         else
         {
-            boolean useLong = false;
-            if (col.getJdbcType() != null)
-            {
-                if (col.getJdbcType() == JdbcType.INTEGER || col.getJdbcType() == JdbcType.BIGINT || col.getJdbcType() == JdbcType.SMALLINT || col.getJdbcType() == JdbcType.TINYINT)
-                {
-                    useLong = true;
-                }
-            }
+            boolean useLong = MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType());
 
-            // TODO Make use of default TypeConverter for a type before falling back to String/Long
             TypeConverter strConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
             TypeConverter longConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
             if (useLong && longConv != null)

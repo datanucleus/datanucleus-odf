@@ -33,7 +33,6 @@ import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
-import org.datanucleus.metadata.ColumnMetaData;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
@@ -471,6 +470,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
 
     protected void storeValueInCell(MemberColumnMapping mapping, int pos, OdfTableCell cell, Object value)
     {
+        Column col = mapping.getColumn(pos);
         AbstractMemberMetaData mmd = mapping.getMemberMetaData();
         if (value instanceof java.sql.Time)
         {
@@ -550,13 +550,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         else if (value instanceof Enum)
         {
-            ColumnMetaData colmd = null;
-            if (mmd.getColumnMetaData() != null && mmd.getColumnMetaData().length > 0)
-            {
-                colmd = mmd.getColumnMetaData()[0];
-            }
-            boolean useNumeric = MetaDataUtils.persistColumnAsNumeric(colmd);
-            if (useNumeric)
+            if (MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType()))
             {
                 cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
                 cell.setDoubleValue((double) ((Enum)value).ordinal());
@@ -577,17 +571,9 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         else
         {
             // See if we can persist it as a Long/String using built-in converters
-            boolean useLong = false;
-            ColumnMetaData[] colmds = mmd.getColumnMetaData();
-            if (colmds != null && colmds.length == 1 && MetaDataUtils.isJdbcTypeNumeric(colmds[0].getJdbcType()))
-            {
-                useLong = true;
-            }
+            boolean useLong = MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType());
 
-            TypeConverter strConv = 
-                    op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
-            TypeConverter longConv = 
-                    op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
+            TypeConverter longConv = op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
             if (useLong)
             {
                 if (longConv != null)
@@ -599,6 +585,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             }
             else
             {
+                TypeConverter strConv = op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
                 if (strConv != null)
                 {
                     cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
