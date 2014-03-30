@@ -49,7 +49,8 @@ import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
 /**
  * Persistence Handler for Open Document Format (ODF) datastores.
  * Handles the insert/update/delete/fetch/locate operations by using ODF Toolkit.
- * <h3>Field -> Cell mapping</h3>
+ * <p>
+ * <b>Field -> Cell mapping</b>
  * A field is mapped to a cell. The field metadata can define a cell number (starting at 0).
  * Specifying the cell number means that the user takes responsibility for the cell numbers
  * being consistent. The default cell numbering is alphabetical start in the root class, and working
