@@ -512,6 +512,14 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
+            
+            final AbstractClassMetaData cmd = sm.getClassMetaData();
+            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            {
+                // Make sure schema exists, using this connection
+                ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+            }
+            
             OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(sm, spreadsheetDoc, false);
             if (ec.getStatistics() != null)
             {
