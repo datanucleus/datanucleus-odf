@@ -505,22 +505,21 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     /* (non-Javadoc)
      * @see org.datanucleus.store.StorePersistenceHandler#locateObject(org.datanucleus.state.ObjectProvider)
      */
-    public void locateObject(ObjectProvider sm)
+    public void locateObject(ObjectProvider op)
     {
-        ExecutionContext ec = sm.getExecutionContext();
+        ExecutionContext ec = op.getExecutionContext();
         ManagedConnection mconn = storeMgr.getConnection(ec);
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
-            
-            final AbstractClassMetaData cmd = sm.getClassMetaData();
+            final AbstractClassMetaData cmd = op.getClassMetaData();
             if (!storeMgr.managesClass(cmd.getFullClassName()))
             {
                 // Make sure schema exists, using this connection
                 ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
             }
             
-            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(sm, spreadsheetDoc, false);
+            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
             if (ec.getStatistics() != null)
             {
                 ec.getStatistics().incrementNumReads();
@@ -534,13 +533,13 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         catch (Exception e)
         {
             NucleusLogger.PERSISTENCE.error("Exception thrown when querying object", e);
-            throw new NucleusDataStoreException("Error when trying to find object with id=" + sm.getInternalObjectId(), e);
+            throw new NucleusDataStoreException("Error when trying to find object with id=" + op.getInternalObjectId(), e);
         }
         finally
         {
             mconn.release();
         }
 
-        throw new NucleusObjectNotFoundException("Object not found", sm.getInternalObjectId());
+        throw new NucleusObjectNotFoundException("Object not found", op.getInternalObjectId());
     }
 }
