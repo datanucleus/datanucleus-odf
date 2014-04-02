@@ -40,6 +40,7 @@ import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.schema.table.Column;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
+import org.datanucleus.store.types.converters.MultiColumnConverter;
 import org.datanucleus.store.types.converters.TypeConverter;
 import org.datanucleus.store.fieldmanager.AbstractFetchFieldManager;
 import org.datanucleus.store.fieldmanager.FieldManager;
@@ -237,44 +238,104 @@ public class FetchFieldManager extends AbstractFetchFieldManager
 
         if (relationType == RelationType.NONE)
         {
-            Object value = null;
             if (mapping.getTypeConverter() != null)
             {
-                TypeConverter conv = ec.getNucleusContext().getTypeManager().getTypeConverterForName(mmd.getTypeConverterName());
+                TypeConverter conv = mapping.getTypeConverter();
                 if (mapping.getNumberOfColumns() > 1)
                 {
-                    // TODO Cater for int array etc
-                    Object[] values = new Object[mapping.getNumberOfColumns()];
+                    boolean isNull = true;
+                    Object valuesArr = null;
+                    Class[] colTypes = ((MultiColumnConverter)conv).getDatastoreColumnTypes();
+                    if (colTypes[0] == int.class)
+                    {
+                        valuesArr = new int[mapping.getNumberOfColumns()];
+                    }
+                    else if (colTypes[0] == long.class)
+                    {
+                        valuesArr = new long[mapping.getNumberOfColumns()];
+                    }
+                    else if (colTypes[0] == double.class)
+                    {
+                        valuesArr = new double[mapping.getNumberOfColumns()];
+                    }
+                    else if (colTypes[0] == float.class)
+                    {
+                        valuesArr = new double[mapping.getNumberOfColumns()];
+                    }
+                    else if (colTypes[0] == String.class)
+                    {
+                        valuesArr = new String[mapping.getNumberOfColumns()];
+                    }
+                    // TODO Support other types
+                    else
+                    {
+                        valuesArr = new Object[mapping.getNumberOfColumns()];
+                    }
+
                     for (int i=0;i<mapping.getNumberOfColumns();i++)
                     {
                         OdfTableCell cell = row.getCellByIndex(mapping.getColumn(i).getPosition());
                         String cellValueType = cell.getValueType();
                         // TODO Cater for other types (in the datastore we only have these types, but they may need updating as per getMemberValueFromCell
+                        Object cellValue = null;
                         if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
                         {
-                            values[i] = cell.getBooleanValue();
+                            cellValue = cell.getBooleanValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.STRING.toString()))
                         {
-                            values[i] = cell.getStringValue();
+                            cellValue = cell.getStringValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
                         {
-                            values[i] = cell.getDoubleValue();
+                            cellValue = cell.getDoubleValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.DATE.toString()))
                         {
-                            values[i] = cell.getDateValue();
+                            cellValue = cell.getDateValue();
                         }
                         else if (cellValueType.equals(OfficeValueTypeAttribute.Value.TIME.toString()))
                         {
-                            values[i] = cell.getTimeValue();
+                            cellValue = cell.getTimeValue();
+                        }
+
+                        if (cellValue == null)
+                        {
+                            Array.set(valuesArr, i, null);
+                        }
+                        else
+                        {
+                            isNull = false;
+                            if (colTypes[i] == int.class)
+                            {
+                                Array.set(valuesArr, i, ((Double)cellValue).intValue());
+                            }
+                            else if (colTypes[i] == long.class)
+                            {
+                                Array.set(valuesArr, i, ((Double)cellValue).longValue());
+                            }
+                            else
+                            {
+                                Array.set(valuesArr, i, cellValue);
+                            }
                         }
                     }
-                    value = conv.toMemberType(values);
+
+                    if (isNull)
+                    {
+                        return null;
+                    }
+
+                    Object memberValue = conv.toMemberType(valuesArr);
+                    if (op != null && memberValue != null)
+                    {
+                        memberValue = op.wrapSCOField(fieldNumber, memberValue, false, false, true);
+                    }
+                    return memberValue;
                 }
                 else
                 {
+                    Object value = null;
                     OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
                     String cellValueType = cell.getValueType();
                     if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
@@ -297,18 +358,19 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     {
                         value = conv.toMemberType(cell.getTimeValue());
                     }
+                    return value;
                 }
             }
             else
             {
                 OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
-                value = getMemberValueFromCell(mapping, 0, cell);
+                Object value = getMemberValueFromCell(mapping, 0, cell);
+                if (op != null && value != null)
+                {
+                    return op.wrapSCOField(fieldNumber, value, false, false, true);
+                }
+                return value;
             }
-            if (op != null && value != null)
-            {
-                return op.wrapSCOField(fieldNumber, value, false, false, true);
-            }
-            return value;
         }
         else if (RelationType.isRelationSingleValued(relationType))
         {
