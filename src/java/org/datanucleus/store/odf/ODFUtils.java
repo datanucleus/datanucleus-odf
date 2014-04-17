@@ -95,7 +95,7 @@ public class ODFUtils
                     ObjectProvider embOP = ec.findObjectProvider(fieldValue);
                     if (embOP == null)
                     {
-                        embOP = ec.newObjectProviderForEmbedded(fieldValue, false, op, pkFieldNumbers[i]);
+                        embOP = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, op, pkFieldNumbers[i]);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
@@ -190,7 +190,7 @@ public class ODFUtils
                     ObjectProvider embOP = ec.findObjectProvider(fieldValue);
                     if (embOP == null)
                     {
-                        embOP = ec.newObjectProviderForEmbedded(fieldValue, false, op, fieldNumbers[i]);
+                        embOP = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, op, fieldNumbers[i]);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
