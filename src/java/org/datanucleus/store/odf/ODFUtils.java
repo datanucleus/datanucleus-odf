@@ -140,8 +140,7 @@ public class ODFUtils
         }
         else if (cmd.getIdentityType() == IdentityType.DATASTORE)
         {
-            OID oid = (OID)op.getInternalObjectId();
-            Object key = oid.getKeyValue();
+            Object key = IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId());
             int index = schemaTable.getDatastoreIdColumn().getPosition();
             List<OdfTableRow> rows = table.getRowList();
             Iterator<OdfTableRow> rowIter = rows.iterator();

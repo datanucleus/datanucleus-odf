@@ -23,7 +23,7 @@ import org.datanucleus.ExecutionContext;
 import org.datanucleus.exceptions.NucleusDataStoreException;
 import org.datanucleus.exceptions.NucleusObjectNotFoundException;
 import org.datanucleus.exceptions.NucleusUserException;
-import org.datanucleus.identity.OID;
+import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.IdentityType;
@@ -136,7 +136,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             {
                 int colIndex = schemaTable.getDatastoreIdColumn().getPosition();
                 OdfTableCell cell = row.getCellByIndex(colIndex);
-                Object idKey = ((OID)op.getInternalObjectId()).getKeyValue();
+                Object idKey = IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId());
                 if (idKey instanceof String)
                 {
                     cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
@@ -144,7 +144,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
                 else
                 {
-                    long idValue = ((Long)((OID)op.getInternalObjectId()).getKeyValue()).longValue();
+                    long idValue = ((Long)IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId())).longValue();
                     cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
                     cell.setDoubleValue(new Double(idValue));
                 }
