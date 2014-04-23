@@ -27,7 +27,6 @@ import org.datanucleus.ExecutionContext;
 import org.datanucleus.FetchPlan;
 import org.datanucleus.exceptions.NucleusDataStoreException;
 import org.datanucleus.identity.IdentityUtils;
-import org.datanucleus.identity.OID;
 import org.datanucleus.identity.OIDFactory;
 import org.datanucleus.identity.SCOID;
 import org.datanucleus.metadata.AbstractClassMetaData;
@@ -392,8 +391,8 @@ public class ODFUtils
                     {
                         idKey = Long.valueOf(idCell.getDoubleValue().longValue());
                     }
-                    OID oid = OIDFactory.getInstance(ec.getNucleusContext(), acmd.getFullClassName(), idKey);
-                    results.add(ec.findObject(oid, new FieldValues()
+                    Object id = OIDFactory.getInstance(ec.getNucleusContext(), acmd.getFullClassName(), idKey);
+                    results.add(ec.findObject(id, new FieldValues()
                     {
                         // ObjectProvider calls the fetchFields method
                         public void fetchFields(ObjectProvider op)

@@ -25,7 +25,6 @@ import java.util.NoSuchElementException;
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.FetchPlan;
 import org.datanucleus.identity.IdentityUtils;
-import org.datanucleus.identity.OID;
 import org.datanucleus.identity.OIDFactory;
 import org.datanucleus.identity.SCOID;
 import org.datanucleus.metadata.AbstractClassMetaData;
@@ -201,8 +200,8 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 {
                                     idKey = Long.valueOf(idCell.getDoubleValue().longValue());
                                 }
-                                OID oid = OIDFactory.getInstance(ec.getNucleusContext(), cmd.getFullClassName(), idKey);
-                                return ec.findObject(oid, new FieldValues()
+                                Object id = OIDFactory.getInstance(ec.getNucleusContext(), cmd.getFullClassName(), idKey);
+                                return ec.findObject(id, new FieldValues()
                                 {
                                     public void fetchFields(ObjectProvider op)
                                     {
