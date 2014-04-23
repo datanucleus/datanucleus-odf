@@ -368,7 +368,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             Object valuePC = op.getExecutionContext().persistObjectInternal(value, op, fieldNumber, -1);
             Object valueId = op.getExecutionContext().getApiAdapter().getIdForObject(valuePC);
             cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
-            cell.setStringValue("[" + IdentityUtils.getPersistableIdentityForId(ec.getApiAdapter(), valueId) + "]");
+            cell.setStringValue("[" + IdentityUtils.getPersistableIdentityForId(valueId) + "]");
             return;
         }
         else if (RelationType.isRelationMultiValued(relationType))
@@ -391,7 +391,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     Object element = collIter.next();
                     Object elementPC = op.getExecutionContext().persistObjectInternal(element, op, fieldNumber, -1);
                     Object elementID = op.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
-                    cellValue.append(IdentityUtils.getPersistableIdentityForId(ec.getApiAdapter(), elementID));
+                    cellValue.append(IdentityUtils.getPersistableIdentityForId(elementID));
                     if (collIter.hasNext())
                     {
                         cellValue.append(",");
@@ -418,7 +418,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     {
                         Object keyPC = op.getExecutionContext().persistObjectInternal(entry.getKey(), op, fieldNumber, -1);
                         Object keyID = op.getExecutionContext().getApiAdapter().getIdForObject(keyPC);
-                        cellValue.append(IdentityUtils.getPersistableIdentityForId(ec.getApiAdapter(), keyID));
+                        cellValue.append(IdentityUtils.getPersistableIdentityForId(keyID));
                     }
                     else
                     {
@@ -429,7 +429,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     {
                         Object valPC = op.getExecutionContext().persistObjectInternal(entry.getValue(), op, fieldNumber, -1);
                         Object valID = op.getExecutionContext().getApiAdapter().getIdForObject(valPC);
-                        cellValue.append(IdentityUtils.getPersistableIdentityForId(ec.getApiAdapter(), valID));
+                        cellValue.append(IdentityUtils.getPersistableIdentityForId(valID));
                     }
                     else
                     {
@@ -454,7 +454,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     Object element = Array.get(value, i);
                     Object elementPC = op.getExecutionContext().persistObjectInternal(element, op, fieldNumber, -1);
                     Object elementID = op.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
-                    cellValue.append(IdentityUtils.getPersistableIdentityForId(ec.getApiAdapter(), elementID));
+                    cellValue.append(IdentityUtils.getPersistableIdentityForId(elementID));
                     if (i < (Array.getLength(value)-1))
                     {
                         cellValue.append(",");
