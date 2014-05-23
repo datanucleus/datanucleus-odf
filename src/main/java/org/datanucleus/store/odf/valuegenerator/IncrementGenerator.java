@@ -26,6 +26,7 @@ import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.valuegenerator.AbstractDatastoreGenerator;
 import org.datanucleus.store.valuegenerator.ValueGenerationBlock;
+import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.doc.table.OdfTable;
@@ -106,7 +107,7 @@ public class IncrementGenerator extends AbstractDatastoreGenerator<Long>
             {
                 if (!storeMgr.getSchemaHandler().isAutoCreateTables())
                 {
-                    throw new NucleusUserException(LOCALISER.msg("040011", worksheetName));
+                    throw new NucleusUserException(Localiser.msg("040011", worksheetName));
                 }
 
                 table = OdfTable.newTable(spreadsheetDoc, 1, 2);

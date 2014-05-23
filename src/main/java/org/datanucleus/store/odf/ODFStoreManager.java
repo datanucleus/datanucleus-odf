@@ -37,6 +37,7 @@ import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.schema.SchemaAwareStoreManager;
 import org.datanucleus.store.schema.table.CompleteClassTable;
 import org.datanucleus.util.ClassUtils;
+import org.datanucleus.util.Localiser;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 
 /**
@@ -44,6 +45,11 @@ import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
  */
 public class ODFStoreManager extends AbstractStoreManager implements SchemaAwareStoreManager
 {
+    static
+    {
+        Localiser.registerBundle("org.datanucleus.store.odf.Localisation", ODFStoreManager.class.getClassLoader());
+    }
+
     public ODFStoreManager(ClassLoaderResolver clr, PersistenceNucleusContext ctx, Map<String, Object> props)
     {
         super("odf", clr, ctx, props);

@@ -58,10 +58,6 @@ import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
  */
 public class ODFPersistenceHandler extends AbstractPersistenceHandler
 {
-    /** Localiser for messages. */
-    protected static final Localiser LOCALISER_ODF = Localiser.getInstance(
-        "org.datanucleus.store.odf.Localisation", ODFStoreManager.class.getClassLoader());
-
     /**
      * Constructor.
      * @param storeMgr Manager for the datastore
@@ -95,8 +91,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             long startTime = System.currentTimeMillis();
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.Insert.Start", 
-                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
+                NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.Insert.Start", StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
             }
 
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
@@ -117,7 +112,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 try
                 {
                     locateObject(op);
-                    throw new NucleusUserException(LOCALISER_ODF.msg("ODF.Insert.ObjectWithIdAlreadyExists",
+                    throw new NucleusUserException(Localiser.msg("ODF.Insert.ObjectWithIdAlreadyExists",
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
                 }
                 catch (NucleusObjectNotFoundException onfe)
@@ -168,7 +163,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 op.setTransactionalVersion(nextVersion);
                 if (NucleusLogger.DATASTORE.isDebugEnabled())
                 {
-                    NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
+                    NucleusLogger.DATASTORE.debug(Localiser.msg("ODF.Insert.ObjectPersistedWithVersion",
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
                 }
 
@@ -188,8 +183,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.ExecutionTime", 
-                    (System.currentTimeMillis() - startTime)));
+                NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.ExecutionTime", (System.currentTimeMillis() - startTime)));
             }
             if (ec.getStatistics() != null)
             {
@@ -199,8 +193,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             if (NucleusLogger.DATASTORE.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersisted",
-                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
+                NucleusLogger.DATASTORE.debug(Localiser.msg("ODF.Insert.ObjectPersisted", StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
             }
 
             // Use SCO wrappers from this point
@@ -295,7 +288,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                     }
                     fieldStr.append(cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumbers[i]).getName());
                 }
-                NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.Update.Start", 
+                NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.Update.Start", 
                     StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), fieldStr.toString()));
             }
 
@@ -304,7 +297,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             if (row == null)
             {
                 String sheetName = schemaTable.getIdentifier();
-                throw new NucleusDataStoreException(LOCALISER_ODF.msg("ODF.RowNotFoundForSheetForWorkbook",
+                throw new NucleusDataStoreException(Localiser.msg("ODF.RowNotFoundForSheetForWorkbook",
                     sheetName, StringUtils.toJVMIDString(op.getInternalObjectId())));
             }
             op.provideFields(updatedFieldNums, new StoreFieldManager(op, row, false, schemaTable));
@@ -315,7 +308,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 op.setTransactionalVersion(nextVersion);
                 if (NucleusLogger.DATASTORE.isDebugEnabled())
                 {
-                    NucleusLogger.DATASTORE.debug(LOCALISER_ODF.msg("ODF.Insert.ObjectPersistedWithVersion",
+                    NucleusLogger.DATASTORE.debug(Localiser.msg("ODF.Insert.ObjectPersistedWithVersion",
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
                 }
 
@@ -337,8 +330,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.ExecutionTime", 
-                    (System.currentTimeMillis() - startTime)));
+                NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.ExecutionTime", (System.currentTimeMillis() - startTime)));
             }
             if (ec.getStatistics() != null)
             {
@@ -382,8 +374,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             long startTime = System.currentTimeMillis();
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.Delete.Start", 
-                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
+                NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.Delete.Start", StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
             }
 
             OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
@@ -399,8 +390,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER_ODF.msg("ODF.ExecutionTime", 
-                    (System.currentTimeMillis() - startTime)));
+                NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.ExecutionTime", (System.currentTimeMillis() - startTime)));
             }
             if (ec.getStatistics() != null)
             {
@@ -453,8 +443,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             long startTime = System.currentTimeMillis();
             if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
             {
-                NucleusLogger.DATASTORE_RETRIEVE.debug(LOCALISER_ODF.msg("ODF.Fetch.Start", 
-                    StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
+                NucleusLogger.DATASTORE_RETRIEVE.debug(Localiser.msg("ODF.Fetch.Start", StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
             }
 
             OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
@@ -468,8 +457,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
                 if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
                 {
-                    NucleusLogger.DATASTORE_RETRIEVE.debug(LOCALISER_ODF.msg("ODF.ExecutionTime", 
-                        (System.currentTimeMillis() - startTime)));
+                    NucleusLogger.DATASTORE_RETRIEVE.debug(Localiser.msg("ODF.ExecutionTime", (System.currentTimeMillis() - startTime)));
                 }
                 if (ec.getStatistics() != null)
                 {

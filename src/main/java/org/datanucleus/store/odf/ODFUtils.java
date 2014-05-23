@@ -37,7 +37,6 @@ import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.schema.table.Table;
-import org.datanucleus.util.Localiser;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
 import org.odftoolkit.odfdom.doc.table.OdfTable;
@@ -50,10 +49,6 @@ import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
  */
 public class ODFUtils
 {
-    /** Localiser for messages. */
-    protected static final Localiser LOCALISER = Localiser.getInstance(
-        "org.datanucleus.store.odf.Localisation", ODFStoreManager.class.getClassLoader());
-
     /**
      * Convenience method to find the row of an object in the provided sheet.
      * For application-identity does a search for a row with the specified PK field values.

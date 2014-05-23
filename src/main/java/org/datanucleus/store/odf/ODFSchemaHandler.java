@@ -49,10 +49,6 @@ import org.odftoolkit.odfdom.pkg.OdfFileDom;
  */
 public class ODFSchemaHandler extends AbstractStoreSchemaHandler
 {
-    /** Localiser for messages. */
-    protected static final Localiser LOCALISER = Localiser.getInstance(
-        "org.datanucleus.store.odf.Localisation", ODFStoreManager.class.getClassLoader());
-
     public ODFSchemaHandler(StoreManager storeMgr)
     {
         super(storeMgr);
@@ -130,7 +126,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
 
                         if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
                         {
-                            NucleusLogger.DATASTORE_PERSIST.debug(LOCALISER.msg("ODF.Insert.SheetCreated", schemaTable.getIdentifier()));
+                            NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.Insert.SheetCreated", schemaTable.getIdentifier()));
                         }
                     }
                 }
