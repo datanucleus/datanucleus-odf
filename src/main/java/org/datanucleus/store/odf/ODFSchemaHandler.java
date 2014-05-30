@@ -90,7 +90,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                         schemaTable = new CompleteClassTable(storeMgr, cmd, new SchemaVerifierImpl(storeMgr, cmd, clr));
                     }
 
-                    String sheetName = schemaTable.getIdentifier();
+                    String sheetName = schemaTable.getName();
                     OdfTable table = spreadsheet.getTableByName(sheetName);
                     if (table == null)
                     {
@@ -102,13 +102,13 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                         }
                         catch (Exception e)
                         {
-                            throw new NucleusDataStoreException("Exception thrown adding worksheet " + schemaTable.getIdentifier(), e);
+                            throw new NucleusDataStoreException("Exception thrown adding worksheet " + schemaTable.getName(), e);
                         }
                         OdfOfficeAutomaticStyles styles = contentDoc.getAutomaticStyles();
                         OdfStyle headerStyle = styles.getStyle("DN_Headers", OdfStyleFamily.TableCell);
 
                         table = OdfTable.newTable(spreadsheet, 1, schemaTable.getNumberOfColumns());
-                        table.setTableName(schemaTable.getIdentifier());
+                        table.setTableName(schemaTable.getName());
 
                         // Set the header row if required TODO Make this optional when ODFDOM allows tables with no rows/columns
                         if (true)
@@ -120,13 +120,13 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                             {
                                 OdfTableCell cell = headerRow.getCellByIndex(schemaCol.getPosition());
                                 cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
-                                cell.setStringValue(schemaCol.getIdentifier());
+                                cell.setStringValue(schemaCol.getName());
                             }
                         }
 
                         if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
                         {
-                            NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.Insert.SheetCreated", schemaTable.getIdentifier()));
+                            NucleusLogger.DATASTORE_PERSIST.debug(Localiser.msg("ODF.Insert.SheetCreated", schemaTable.getName()));
                         }
                     }
                 }
@@ -177,7 +177,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                         schemaTable = new CompleteClassTable(storeMgr, cmd, new SchemaVerifierImpl(storeMgr, cmd, clr));
                     }
 
-                    OdfTable table = spreadsheet.getTableByName(schemaTable.getIdentifier());
+                    OdfTable table = spreadsheet.getTableByName(schemaTable.getName());
                     if (table != null)
                     {
                         table.remove();

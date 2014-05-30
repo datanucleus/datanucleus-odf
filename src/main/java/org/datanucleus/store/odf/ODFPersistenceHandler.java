@@ -103,7 +103,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
 
             // Find the sheet (table) appropriate for storing objects of this class TODO Coordinate this with manageClasses above, maybe not needed here
-            String sheetName = schemaTable.getIdentifier();
+            String sheetName = schemaTable.getName();
             OdfTable table = spreadsheetDoc.getTableByName(sheetName);
 
             if (cmd.getIdentityType() == IdentityType.APPLICATION || cmd.getIdentityType() == IdentityType.DATASTORE)
@@ -296,7 +296,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, true);
             if (row == null)
             {
-                String sheetName = schemaTable.getIdentifier();
+                String sheetName = schemaTable.getName();
                 throw new NucleusDataStoreException(Localiser.msg("ODF.RowNotFoundForSheetForWorkbook",
                     sheetName, StringUtils.toJVMIDString(op.getInternalObjectId())));
             }
@@ -385,7 +385,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             else
             {
                 // Remove the row node
-                spreadsheetDoc.getTableByName(schemaTable.getIdentifier()).removeRowsByIndex(row.getRowIndex(), 1);
+                spreadsheetDoc.getTableByName(schemaTable.getName()).removeRowsByIndex(row.getRowIndex(), 1);
             }
 
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())

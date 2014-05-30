@@ -63,7 +63,7 @@ public class ODFUtils
         ExecutionContext ec = op.getExecutionContext();
         final AbstractClassMetaData cmd = op.getClassMetaData();
         Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
-        String sheetName = schemaTable.getIdentifier();
+        String sheetName = schemaTable.getName();
         OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table == null)
         {
@@ -332,7 +332,7 @@ public class ODFUtils
         List results = new ArrayList();
 
         final Table schemaTable = ec.getStoreManager().getStoreDataForClass(acmd.getFullClassName()).getTable();
-        String sheetName = schemaTable.getIdentifier();
+        String sheetName = schemaTable.getName();
         final OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table != null)
         {

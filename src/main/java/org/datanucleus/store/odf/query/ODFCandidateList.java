@@ -147,7 +147,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
             {
                 // Object is of this candidate type, so find the object
                 Table table = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
-                String sheetName = table.getIdentifier();
+                String sheetName = table.getName();
                 OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
                 List<OdfTableRow> rows = worksheet.getRowList();
                 int current = first;
