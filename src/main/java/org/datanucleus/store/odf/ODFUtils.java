@@ -62,7 +62,7 @@ public class ODFUtils
     {
         ExecutionContext ec = op.getExecutionContext();
         final AbstractClassMetaData cmd = op.getClassMetaData();
-        Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+        Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
         String sheetName = schemaTable.getIdentifier();
         OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table == null)
@@ -327,12 +327,11 @@ public class ODFUtils
      * @param ignoreCache Whether to ignore the cache
      * @return List of objects (connected to ObjectProviders as required)
      */
-    private static List getObjectsOfCandidateType(ExecutionContext ec, OdfSpreadsheetDocument spreadsheetDoc,
-            final AbstractClassMetaData acmd, boolean ignoreCache)
+    private static List getObjectsOfCandidateType(ExecutionContext ec, OdfSpreadsheetDocument spreadsheetDoc, final AbstractClassMetaData acmd, boolean ignoreCache)
     {
         List results = new ArrayList();
 
-        final Table schemaTable = (Table) ec.getStoreManager().getStoreDataForClass(acmd.getFullClassName()).getProperty("tableObject");
+        final Table schemaTable = ec.getStoreManager().getStoreDataForClass(acmd.getFullClassName()).getTable();
         String sheetName = schemaTable.getIdentifier();
         final OdfTable table = spreadsheetDoc.getTableByName(sheetName);
         if (table != null)

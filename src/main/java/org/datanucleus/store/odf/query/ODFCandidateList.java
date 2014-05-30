@@ -146,7 +146,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
             if (index >= first && index < last)
             {
                 // Object is of this candidate type, so find the object
-                Table table = (Table) ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getProperty("tableObject");
+                Table table = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
                 String sheetName = table.getIdentifier();
                 OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
                 List<OdfTableRow> rows = worksheet.getRowList();

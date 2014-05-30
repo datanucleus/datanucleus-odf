@@ -83,7 +83,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                     Table schemaTable = null;
                     if (storeData != null)
                     {
-                        schemaTable = (Table) storeData.getProperties().get("tableObject");
+                        schemaTable = storeData.getTable();
                     }
                     else
                     {
@@ -170,7 +170,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                     Table schemaTable = null;
                     if (storeData != null)
                     {
-                        schemaTable = (Table) storeData.getProperties().get("tableObject");
+                        schemaTable = storeData.getTable();
                     }
                     else
                     {
