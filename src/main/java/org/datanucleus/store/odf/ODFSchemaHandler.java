@@ -87,7 +87,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                     }
                     else
                     {
-                        schemaTable = new CompleteClassTable(storeMgr, cmd, new SchemaVerifierImpl(storeMgr, cmd, clr));
+                        schemaTable = new CompleteClassTable(storeMgr, cmd, null);
                     }
 
                     String sheetName = schemaTable.getName();
@@ -174,7 +174,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                     }
                     else
                     {
-                        schemaTable = new CompleteClassTable(storeMgr, cmd, new SchemaVerifierImpl(storeMgr, cmd, clr));
+                        schemaTable = new CompleteClassTable(storeMgr, cmd, null);
                     }
 
                     OdfTable table = spreadsheet.getTableByName(schemaTable.getName());

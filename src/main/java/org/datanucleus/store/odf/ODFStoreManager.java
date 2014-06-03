@@ -134,7 +134,7 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
                     StoreData sd = storeDataMgr.get(cmd.getFullClassName());
                     if (sd == null)
                     {
-                        CompleteClassTable table = new CompleteClassTable(this, cmd, new SchemaVerifierImpl(this, cmd, clr));
+                        CompleteClassTable table = new CompleteClassTable(this, cmd, null);
                         sd = newStoreData(cmd, clr);
                         sd.setTable(table);
                         registerStoreData(sd);
