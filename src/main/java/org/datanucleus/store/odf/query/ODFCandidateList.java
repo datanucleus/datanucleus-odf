@@ -78,7 +78,8 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
         {
             AbstractClassMetaData cmd = cmdIter.next();
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
-            String sheetName = ec.getStoreManager().getNamingFactory().getTableName(cmd);
+            Table table = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+            String sheetName = table.getName();
             OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
             int size = 0;
             if (worksheet != null)
