@@ -118,6 +118,7 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
         String[] filteredClassNames = getNucleusContext().getTypeManager().filterOutSupportedSecondClassNames(classNames);
 
         // Find the ClassMetaData for these classes and all referenced by these classes
+        Set<String> clsNameSet = new HashSet<String>();
         Iterator iter = getMetaDataManager().getReferencedClasses(filteredClassNames, clr).iterator();
         while (iter.hasNext())
         {
@@ -140,13 +141,13 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
                         registerStoreData(sd);
                     }
 
-                    // Create schema for class
-                    Set<String> clsNameSet = new HashSet<String>();
                     clsNameSet.add(cmd.getFullClassName());
-                    schemaHandler.createSchemaForClasses(clsNameSet, null, spreadsheet);
                 }
             }
         }
+
+        // Create schema for classes
+        schemaHandler.createSchemaForClasses(clsNameSet, null, spreadsheet);
     }
 
     public void createSchema(String schemaName, Properties props)
