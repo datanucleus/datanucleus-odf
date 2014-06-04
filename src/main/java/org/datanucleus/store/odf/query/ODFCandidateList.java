@@ -32,6 +32,7 @@ import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.fieldmanager.FieldManager;
+import org.datanucleus.store.odf.ODFStoreManager;
 import org.datanucleus.store.odf.ODFUtils;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.query.AbstractCandidateLazyLoadList;
@@ -74,10 +75,17 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
         // Count the instances per class by scanning the associated worksheets
         numberInstancesPerClass = new ArrayList<Integer>();
         Iterator<AbstractClassMetaData> cmdIter = cmds.iterator();
+        ODFStoreManager storeMgr = (ODFStoreManager)ec.getStoreManager();
         while (cmdIter.hasNext())
         {
             AbstractClassMetaData cmd = cmdIter.next();
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
+
+            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            {
+                // Make sure schema exists, using this connection
+                storeMgr.manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+            }
             Table table = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
             String sheetName = table.getName();
             OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
