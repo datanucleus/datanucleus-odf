@@ -40,6 +40,8 @@ import org.datanucleus.util.NucleusLogger;
  */
 public class JDOQLQuery extends AbstractJDOQLQuery
 {
+    private static final long serialVersionUID = 1719046468532937103L;
+
     /**
      * Constructs a new query instance that uses the given persistence manager.
      * @param storeMgr StoreManager for this query
