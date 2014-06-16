@@ -382,11 +382,9 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             {
                 throw new NucleusObjectNotFoundException("object not found", op.getObject());
             }
-            else
-            {
-                // Remove the row node
-                spreadsheetDoc.getTableByName(schemaTable.getName()).removeRowsByIndex(row.getRowIndex(), 1);
-            }
+
+            // Remove the row node
+            spreadsheetDoc.getTableByName(schemaTable.getName()).removeRowsByIndex(row.getRowIndex(), 1);
 
             if (NucleusLogger.DATASTORE_PERSIST.isDebugEnabled())
             {

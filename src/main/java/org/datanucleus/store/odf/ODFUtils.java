@@ -258,8 +258,7 @@ public class ODFUtils
         {
             return true;
         }
-        else if (value instanceof String && isOfficeValueTypeConsistent(cell, OfficeValueTypeAttribute.Value.STRING) && 
-            cell.getStringValue().equals((String)value))
+        else if (value instanceof String && isOfficeValueTypeConsistent(cell, OfficeValueTypeAttribute.Value.STRING) && cell.getStringValue().equals(value))
         {
             return true;
         }

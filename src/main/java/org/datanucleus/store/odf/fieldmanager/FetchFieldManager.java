@@ -333,44 +333,40 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     }
                     return memberValue;
                 }
-                else
-                {
-                    Object value = null;
-                    OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
-                    String cellValueType = cell.getValueType();
-                    if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
-                    {
-                        value = conv.toMemberType(cell.getBooleanValue());
-                    }
-                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.STRING.toString()))
-                    {
-                        value = conv.toMemberType(cell.getStringValue());
-                    }
-                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
-                    {
-                        value = conv.toMemberType(cell.getDoubleValue());
-                    }
-                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.DATE.toString()))
-                    {
-                        value = conv.toMemberType(cell.getDateValue());
-                    }
-                    else if (cellValueType.equals(OfficeValueTypeAttribute.Value.TIME.toString()))
-                    {
-                        value = conv.toMemberType(cell.getTimeValue());
-                    }
-                    return value;
-                }
-            }
-            else
-            {
+
+                Object value = null;
                 OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
-                Object value = getMemberValueFromCell(mapping, 0, cell);
-                if (op != null && value != null)
+                String cellValueType = cell.getValueType();
+                if (cellValueType.equals(OfficeValueTypeAttribute.Value.BOOLEAN.toString()))
                 {
-                    return op.wrapSCOField(fieldNumber, value, false, false, true);
+                    value = conv.toMemberType(cell.getBooleanValue());
+                }
+                else if (cellValueType.equals(OfficeValueTypeAttribute.Value.STRING.toString()))
+                {
+                    value = conv.toMemberType(cell.getStringValue());
+                }
+                else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
+                {
+                    value = conv.toMemberType(cell.getDoubleValue());
+                }
+                else if (cellValueType.equals(OfficeValueTypeAttribute.Value.DATE.toString()))
+                {
+                    value = conv.toMemberType(cell.getDateValue());
+                }
+                else if (cellValueType.equals(OfficeValueTypeAttribute.Value.TIME.toString()))
+                {
+                    value = conv.toMemberType(cell.getTimeValue());
                 }
                 return value;
             }
+
+            OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
+            Object value = getMemberValueFromCell(mapping, 0, cell);
+            if (op != null && value != null)
+            {
+                return op.wrapSCOField(fieldNumber, value, false, false, true);
+            }
+            return value;
         }
         else if (RelationType.isRelationSingleValued(relationType))
         {
@@ -399,10 +395,8 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 }
                 return obj;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
         else if (RelationType.isRelationMultiValued(relationType))
         {

@@ -245,10 +245,8 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 }, null, ignoreCache, false);
                             }
                         }
-                        else
-                        {
-                            current++;
-                        }
+
+                        current++;
                     }
                 }
             }
