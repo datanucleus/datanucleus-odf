@@ -329,7 +329,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     Object memberValue = conv.toMemberType(valuesArr);
                     if (op != null && memberValue != null)
                     {
-                        memberValue = op.wrapSCOField(fieldNumber, memberValue, false, false, true);
+                        memberValue = SCOUtils.wrapSCOField(op, fieldNumber, memberValue, false, false, true);
                     }
                     return memberValue;
                 }
@@ -364,7 +364,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             Object value = getMemberValueFromCell(mapping, 0, cell);
             if (op != null && value != null)
             {
-                return op.wrapSCOField(fieldNumber, value, false, false, true);
+                return SCOUtils.wrapSCOField(op, fieldNumber, value, false, false, true);
             }
             return value;
         }
@@ -448,7 +448,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     }
                     if (op != null)
                     {
-                        return op.wrapSCOField(fieldNumber, coll, false, false, true);
+                        return SCOUtils.wrapSCOField(op, fieldNumber, coll, false, false, true);
                     }
                     return coll;
                 }
@@ -553,7 +553,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     }
                     if (op != null)
                     {
-                        return op.wrapSCOField(fieldNumber, map, false, false, true);
+                        return SCOUtils.wrapSCOField(op, fieldNumber, map, false, false, true);
                     }
                     return map;
                 }
@@ -588,7 +588,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     }
                     if (op != null)
                     {
-                        return op.wrapSCOField(fieldNumber, array, false, false, true);
+                        return SCOUtils.wrapSCOField(op, fieldNumber, array, false, false, true);
                     }
                     return array;
                 }
