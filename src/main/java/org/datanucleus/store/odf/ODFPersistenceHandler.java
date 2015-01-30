@@ -437,6 +437,10 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
+            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            {
+                ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+            }
             Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
             long startTime = System.currentTimeMillis();
             if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
