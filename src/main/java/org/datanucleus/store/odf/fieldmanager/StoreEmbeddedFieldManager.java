@@ -97,28 +97,28 @@ public class StoreEmbeddedFieldManager extends StoreFieldManager
                 AbstractClassMetaData embcmd = ec.getMetaDataManager().getMetaDataForClass(embcls, clr);
                 if (embcmd != null)
                 {
-                    ObjectProvider embSM = null;
+                    ObjectProvider embOP = null;
                     if (value != null)
                     {
-                        embSM = ec.findObjectProviderForEmbedded(value, op, mmd);
+                        embOP = ec.findObjectProviderForEmbedded(value, op, mmd);
                     }
                     else
                     {
-                        embSM = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, embcmd, op, fieldNumber);
+                        embOP = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, embcmd, op, fieldNumber);
                     }
 
                     List<AbstractMemberMetaData> embMmds = new ArrayList<AbstractMemberMetaData>(mmds);
                     embMmds.add(mmd);
-                    embSM.provideFields(embcmd.getAllMemberPositions(), new StoreEmbeddedFieldManager(embSM, row, insert, embMmds, table));
+                    embOP.provideFields(embcmd.getAllMemberPositions(), new StoreEmbeddedFieldManager(embOP, row, insert, embMmds, table));
                     return;
                 }
             }
-        }
-        else
-        {
-            // TODO Embedded Collection
-            NucleusLogger.PERSISTENCE.debug("Field=" + mmd.getFullFieldName() + " not currently supported (embedded), storing as null");
-            return;
+            else
+            {
+                // TODO Embedded Collection
+                NucleusLogger.PERSISTENCE.debug("Field=" + mmd.getFullFieldName() + " not currently supported (embedded), storing as null");
+                return;
+            }
         }
 
         if (op == null)
