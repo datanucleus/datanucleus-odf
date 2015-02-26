@@ -456,6 +456,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             }
             else
             {
+                // TODO Update this to not try to retrieve non-persistable fields (e.g transactional)
                 op.replaceFields(fieldNumbers, new FetchFieldManager(op, row, schemaTable));
 
                 if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
