@@ -179,9 +179,9 @@ public class ConnectionFactoryImpl extends AbstractConnectionFactory
                 try
                 {
                     ((OdfDocument)conn).save(file);
-                    ((OdfDocument)conn).close();
-                    file = null;
-                    conn = null;
+//                    ((OdfDocument)conn).close();
+//                    file = null;
+//                    conn = null;
                 }
                 catch (Exception e)
                 {
