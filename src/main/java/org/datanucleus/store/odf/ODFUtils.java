@@ -349,6 +349,7 @@ public class ODFUtils
                     continue;
                 }
 
+                // TODO Change acmd.getAllMemberPositions() to omit nonpersistent fields
                 if (acmd.getIdentityType() == IdentityType.APPLICATION)
                 {
                     Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false, // TODO Use "fm" from above

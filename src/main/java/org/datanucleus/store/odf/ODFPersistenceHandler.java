@@ -18,6 +18,8 @@ Contributors:
 package org.datanucleus.store.odf;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.datanucleus.ExecutionContext;
 import org.datanucleus.exceptions.NucleusDataStoreException;
@@ -26,6 +28,7 @@ import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
+import org.datanucleus.metadata.FieldPersistenceModifier;
 import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.VersionMetaData;
 import org.datanucleus.state.ObjectProvider;
@@ -430,59 +433,97 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             NucleusLogger.PERSISTENCE.debug(str.toString());
         }
 
-        ExecutionContext ec = op.getExecutionContext();
-        ManagedConnection mconn = storeMgr.getConnection(ec);
-        boolean notFound = false;
-        try
+        // Strip out any non-persistent fields
+        Set<Integer> nonpersistableFields = null;
+        for (int i = 0; i < fieldNumbers.length; i++)
         {
-            OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
-
-            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumbers[i]);
+            if (mmd.getPersistenceModifier() != FieldPersistenceModifier.PERSISTENT)
             {
-                // Make sure schema exists, using this connection
-                ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                if (nonpersistableFields == null)
+                {
+                    nonpersistableFields = new HashSet<Integer>();
+                }
+                nonpersistableFields.add(i);
             }
-            Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
-            long startTime = System.currentTimeMillis();
-            if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
+        }
+        if (nonpersistableFields != null)
+        {
+            // Just go through motions for non-persistable fields
+            for (Integer fieldNum : nonpersistableFields)
             {
-                NucleusLogger.DATASTORE_RETRIEVE.debug(Localiser.msg("ODF.Fetch.Start", StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
+                op.replaceField(fieldNum, op.provideField(fieldNum));
             }
-
-            OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
-            if (row == null)
+        }
+        if (nonpersistableFields == null || nonpersistableFields.size() != fieldNumbers.length)
+        {
+            ExecutionContext ec = op.getExecutionContext();
+            ManagedConnection mconn = storeMgr.getConnection(ec);
+            boolean notFound = false;
+            try
             {
-                notFound = true;
-            }
-            else
-            {
-                // TODO Update this to not try to retrieve non-persistable fields (e.g transactional)
-                op.replaceFields(fieldNumbers, new FetchFieldManager(op, row, schemaTable));
+                OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
+                if (!storeMgr.managesClass(cmd.getFullClassName()))
+                {
+                    // Make sure schema exists, using this connection
+                    ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                }
+                Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+                long startTime = System.currentTimeMillis();
                 if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
                 {
-                    NucleusLogger.DATASTORE_RETRIEVE.debug(Localiser.msg("ODF.ExecutionTime", (System.currentTimeMillis() - startTime)));
+                    NucleusLogger.DATASTORE_RETRIEVE.debug(Localiser.msg("ODF.Fetch.Start", StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId()));
                 }
-                if (ec.getStatistics() != null)
-                {
-                    ec.getStatistics().incrementNumReads();
-                    ec.getStatistics().incrementFetchCount();
-                }
-                // TODO Version retrieval
-            }
-        }
-        catch (Exception e)
-        {
-            throw new NucleusDataStoreException("Exception fetching object", e);
-        }
-        finally
-        {
-            mconn.release();
-        }
 
-        if (notFound)
-        {
-            throw new NucleusObjectNotFoundException("object not found", op.getObject());
+                OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
+                if (row == null)
+                {
+                    notFound = true;
+                }
+                else
+                {
+                    if (nonpersistableFields != null)
+                    {
+                        // Strip out any nonpersistable fields
+                        int[] persistableFieldNums = new int[fieldNumbers.length - nonpersistableFields.size()];
+                        int pos = 0;
+                        for (int i = 0; i < fieldNumbers.length; i++)
+                        {
+                            if (!nonpersistableFields.contains(fieldNumbers[i]))
+                            {
+                                persistableFieldNums[pos++] = fieldNumbers[i];
+                            }
+                        }
+                        fieldNumbers = persistableFieldNums;
+                    }
+                    op.replaceFields(fieldNumbers, new FetchFieldManager(op, row, schemaTable));
+
+                    if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
+                    {
+                        NucleusLogger.DATASTORE_RETRIEVE.debug(Localiser.msg("ODF.ExecutionTime", (System.currentTimeMillis() - startTime)));
+                    }
+                    if (ec.getStatistics() != null)
+                    {
+                        ec.getStatistics().incrementNumReads();
+                        ec.getStatistics().incrementFetchCount();
+                    }
+                    // TODO Version retrieval
+                }
+            }
+            catch (Exception e)
+            {
+                throw new NucleusDataStoreException("Exception fetching object", e);
+            }
+            finally
+            {
+                mconn.release();
+            }
+
+            if (notFound)
+            {
+                throw new NucleusObjectNotFoundException("object not found", op.getObject());
+            }
         }
     }
 

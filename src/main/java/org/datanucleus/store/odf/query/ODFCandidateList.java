@@ -176,6 +176,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                         {
                             // This row equates to the required index
                             final FieldManager fm = new FetchFieldManager(ec, cmd, row, table);
+                            // TODO Change cmd.getAllMemberPositions() to some form of FetchPlan, so we omit any non-persistable fields
                             if (cmd.getIdentityType() == IdentityType.APPLICATION)
                             {
                                 Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, cmd, null, false, fm);
