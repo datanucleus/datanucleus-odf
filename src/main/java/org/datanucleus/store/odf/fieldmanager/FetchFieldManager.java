@@ -48,6 +48,7 @@ import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.types.SCOUtils;
 import org.datanucleus.util.Base64;
 import org.datanucleus.util.NucleusLogger;
+import org.datanucleus.util.StringUtils;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
@@ -412,7 +413,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             // Collection/Map/Array
             OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
             String cellStr = cell.getStringValue();
-            if (cellStr == null)
+            if (cellStr == null || StringUtils.isWhitespace(cellStr))
             {
                 return null;
             }
@@ -665,11 +666,11 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     return array;
                 }
             }
-            throw new NucleusException("Dont currently support retrieval of collection/map/array types from ODF");
+            throw new NucleusException("Dont currently support retrieval of collection/map/array types from ODF for member=" + mmd.getFullFieldName() + " cellStr=" + cellStr);
         }
         else
         {
-            throw new NucleusException("Dont currently support retrieval of type " + mmd.getTypeName() + " from ODF");
+            throw new NucleusException("Dont currently support retrieval of type " + mmd.getTypeName() + " from ODF member=" + mmd.getFullFieldName());
         }
     }
 
