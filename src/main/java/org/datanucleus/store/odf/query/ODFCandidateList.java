@@ -65,8 +65,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
      * @param mconn Connection to the datastore
      * @param ignoreCache Whether to ignore the cache on object retrieval
      */
-    public ODFCandidateList(Class cls, boolean subclasses, ExecutionContext ec, String cacheType,
-            ManagedConnection mconn, boolean ignoreCache)
+    public ODFCandidateList(Class cls, boolean subclasses, ExecutionContext ec, String cacheType, ManagedConnection mconn, boolean ignoreCache)
     {
         super(cls, subclasses, ec, cacheType);
         this.mconn = mconn;
@@ -86,6 +85,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                 // Make sure schema exists, using this connection
                 storeMgr.manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
             }
+
             Table table = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
             String sheetName = table.getName();
             OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
