@@ -31,6 +31,7 @@ import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.connection.AbstractConnectionFactory;
 import org.datanucleus.store.connection.AbstractManagedConnection;
 import org.datanucleus.store.connection.ManagedConnection;
+import org.datanucleus.util.NucleusLogger;
 import org.odftoolkit.odfdom.doc.OdfDocument;
 import org.odftoolkit.odfdom.pkg.OdfFileDom;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
@@ -155,6 +156,7 @@ public class ConnectionFactoryImpl extends AbstractConnectionFactory
                         conn = doc;
                     }
 
+                    NucleusLogger.CONNECTION.debug("ManagedConnection " + this.toString() + " is starting for file=" + file);
                     conn = OdfDocument.loadDocument(file);
                 }
                 catch (Exception e)
@@ -170,6 +172,10 @@ public class ConnectionFactoryImpl extends AbstractConnectionFactory
             if (commitOnRelease)
             {
                 // Non-transactional operation end : Write to file and close connection
+                NucleusLogger.CONNECTION.debug("ManagedConnection " + this.toString() + " is committing");
+
+                // Note that if we have one operation which does a get() then that calls another method to do a get() and then release() this will close the connection before
+                // the second release comes in.
                 try
                 {
                     ((OdfDocument)conn).save(file);
@@ -181,6 +187,7 @@ public class ConnectionFactoryImpl extends AbstractConnectionFactory
                 {
                     throw new NucleusException(e.getMessage(),e);
                 }
+                NucleusLogger.CONNECTION.debug("ManagedConnection " + this.toString() + " committed connection");
             }
             super.release();
         }
@@ -199,8 +206,10 @@ public class ConnectionFactoryImpl extends AbstractConnectionFactory
                     listeners.get(i).managedConnectionPreClose();
                 }
 
+                NucleusLogger.CONNECTION.debug("ManagedConnection " + this.toString() + " is committing");
                 ((OdfDocument)conn).save(file);
                 ((OdfDocument)conn).close();
+                NucleusLogger.CONNECTION.debug("ManagedConnection " + this.toString() + " committed connection");
                 file = null;
                 conn = null;
             }
