@@ -504,6 +504,8 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                             String keyStr = keyCmpt.substring(1, keyCmpt.length()-1);
                             String valStr = valCmpt.substring(1, valCmpt.length()-1);
 
+                            boolean keySet = true;
+                            boolean valSet = true;
                             Object key = null;
                             if (keyCmd != null)
                             {
@@ -525,6 +527,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                                 {
                                     // Object no longer exists. Deleted by user? so ignore
                                     changeDetected = true;
+                                    keySet = false;
                                 }
                             }
                             else
@@ -567,6 +570,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                                 {
                                     // Object no longer exists. Deleted by user? so ignore
                                     changeDetected = true;
+                                    valSet = false;
                                 }
                             }
                             else
@@ -588,7 +592,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                                 }
                             }
 
-                            if (!changeDetected)
+                            if (keySet && valSet)
                             {
                                 map.put(key, val);
                             }
