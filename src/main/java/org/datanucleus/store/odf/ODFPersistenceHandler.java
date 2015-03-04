@@ -444,7 +444,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 {
                     nonpersistableFields = new HashSet<Integer>();
                 }
-                nonpersistableFields.add(i);
+                nonpersistableFields.add(fieldNumbers[i]);
             }
         }
         if (nonpersistableFields != null)
