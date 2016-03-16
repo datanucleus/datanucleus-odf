@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.ExecutionContext;
@@ -286,6 +287,30 @@ public class StoreFieldManager extends AbstractStoreFieldManager
     protected void storeObjectFieldInternal(int fieldNumber, Object value, AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
     {
         MemberColumnMapping mapping = getColumnMapping(fieldNumber);
+
+        Class type = mmd.getType();
+        if (Optional.class.isAssignableFrom(mmd.getType()))
+        {
+            if (relationType != RelationType.NONE)
+            {
+                relationType = RelationType.ONE_TO_ONE_UNI;
+            }
+
+            type = clr.classForName(mmd.getCollection().getElementType());
+            if (value != null)
+            {
+                Optional opt = (Optional)value;
+                if (opt.isPresent())
+                {
+                    value = opt.get();
+                }
+                else
+                {
+                    value = null;
+                }
+            }
+        }
+
         if (relationType == RelationType.NONE)
         {
             if (value == null)
@@ -303,7 +328,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 else
                 {
                     OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
-                    setNullInCell(cell, mmd.getType());
+                    setNullInCell(cell, type);
                 }
                 return;
             }
@@ -389,7 +414,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
             if (value == null)
             {
-                setNullInCell(cell, mmd.getType());
+                setNullInCell(cell, type);
                 return;
             }
 
@@ -549,6 +574,12 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
             cell.setDoubleValue(new Double((Byte)value));
+            return;
+        }
+        else if (value instanceof String)
+        {
+            cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
+            cell.setStringValue("" + value);
             return;
         }
         else if (value instanceof Character)

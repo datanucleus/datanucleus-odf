@@ -25,6 +25,7 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.datanucleus.ClassLoaderResolver;
 import org.datanucleus.ExecutionContext;
@@ -238,6 +239,16 @@ public class FetchFieldManager extends AbstractFetchFieldManager
     {
         MemberColumnMapping mapping = getColumnMapping(fieldNumber);
 
+        boolean optional = false;
+        if (Optional.class.isAssignableFrom(mmd.getType()))
+        {
+            if (relationType != RelationType.NONE)
+            {
+                relationType = RelationType.ONE_TO_ONE_UNI;
+            }
+            optional = true;
+        }
+
         if (relationType == RelationType.NONE)
         {
             if (mapping.getTypeConverter() != null)
@@ -363,12 +374,11 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             }
 
             OdfTableCell cell = row.getCellByIndex(mapping.getColumn(0).getPosition());
-            Object value = getMemberValueFromCell(mapping, 0, cell);
-            if (op != null && value != null)
-            {
-                return SCOUtils.wrapSCOField(op, fieldNumber, value, true);
-            }
-            return value;
+            Class type = optional ? clr.classForName(mmd.getCollection().getElementType()) : mmd.getType();
+            Object value = getMemberValueFromCell(mapping, type, 0, cell);
+            value = optional ? (value != null ? Optional.of(value) : Optional.empty()) : value;
+
+            return (op != null && value != null) ? SCOUtils.wrapSCOField(op, fieldNumber, value, true) : value;
         }
         else if (RelationType.isRelationSingleValued(relationType))
         {
@@ -377,14 +387,15 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             String idStr = cell.getStringValue();
             if (idStr == null)
             {
-                return null;
+                return optional ? Optional.empty() : null;
             }
 
             if (idStr.startsWith("[") && idStr.endsWith("]"))
             {
                 idStr = idStr.substring(1, idStr.length()-1);
                 Object obj = null;
-                AbstractClassMetaData memberCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
+                Class memberType = optional ? clr.classForName(mmd.getCollection().getElementType()) : mmd.getType();
+                AbstractClassMetaData memberCmd = ec.getMetaDataManager().getMetaDataForClass(memberType, clr);
                 try
                 {
                     if (memberCmd.usesSingleFieldIdentityClass() && idStr.indexOf(':') > 0)
@@ -403,10 +414,10 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     NucleusLogger.GENERAL.warn("Object=" + op + " field=" + mmd.getFullFieldName() + " has id=" + idStr + " but could not instantiate object with that identity");
                     return null;
                 }
-                return obj;
+                return optional ? Optional.of(obj) : obj;
             }
 
-            return null;
+            return optional ? Optional.empty() : null;
         }
         else if (RelationType.isRelationMultiValued(relationType))
         {
@@ -678,11 +689,10 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         }
     }
 
-    protected Object getMemberValueFromCell(MemberColumnMapping mapping, int pos, OdfTableCell cell)
+    protected Object getMemberValueFromCell(MemberColumnMapping mapping, Class type, int pos, OdfTableCell cell)
     {
         Column col = mapping.getColumn(pos);
         Object value = null;
-        Class type = mapping.getMemberMetaData().getType();
         AbstractMemberMetaData mmd = mapping.getMemberMetaData();
         if (type == Boolean.class)
         {
@@ -747,6 +757,14 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 return null;
             }
             value = Short.valueOf(cell.getDoubleValue().shortValue());
+        }
+        else if (type == String.class)
+        {
+            if (cell.getStringValue() == null || cell.getStringValue().length() == 0)
+            {
+                return null;
+            }
+            value = cell.getStringValue();
         }
         else if (type == Calendar.class)
         {
