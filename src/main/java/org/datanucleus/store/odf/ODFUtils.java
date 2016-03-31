@@ -36,6 +36,7 @@ import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
+import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
@@ -96,14 +97,30 @@ public class ODFUtils
                         List<AbstractMemberMetaData> embMmds = new ArrayList();
                         embMmds.add(mmd);
                         embMmds.add(embCmd.getMetaDataForManagedMemberAtAbsolutePosition(j));
-                        pkFieldColList.add(schemaTable.getMemberColumnMappingForEmbeddedMember(embMmds).getColumn(0).getPosition());
-                        pkFieldValList.add(embOP.provideField(j));
+                        MemberColumnMapping mapping = schemaTable.getMemberColumnMappingForEmbeddedMember(embMmds);
+                        pkFieldColList.add(mapping.getColumn(0).getPosition());
+                        if (mapping.getTypeConverter() != null)
+                        {
+                            pkFieldValList.add(mapping.getTypeConverter().toDatastoreType(embOP.provideField(j)));
+                        }
+                        else
+                        {
+                            pkFieldValList.add(embOP.provideField(j));
+                        }
                     }
                 }
                 else
                 {
-                    pkFieldColList.add(schemaTable.getMemberColumnMappingForMember(mmd).getColumn(0).getPosition());
-                    pkFieldValList.add(fieldValue);
+                    MemberColumnMapping mapping = schemaTable.getMemberColumnMappingForMember(mmd);
+                    pkFieldColList.add(mapping.getColumn(0).getPosition());
+                    if (mapping.getTypeConverter() != null)
+                    {
+                        pkFieldValList.add(mapping.getTypeConverter().toDatastoreType(fieldValue));
+                    }
+                    else
+                    {
+                        pkFieldValList.add(fieldValue);
+                    }
                 }
             }
 
