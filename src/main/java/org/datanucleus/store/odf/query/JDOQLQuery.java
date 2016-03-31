@@ -92,8 +92,7 @@ public class JDOQLQuery extends AbstractJDOQLQuery
             List candidates = null;
             if (candidateCollection == null)
             {
-                candidates = new ODFCandidateList(candidateClass, subclasses, ec, 
-                    (String)getExtension(Query.EXTENSION_RESULT_CACHE_TYPE), mconn, ignoreCache);
+                candidates = new ODFCandidateList(candidateClass, subclasses, ec, (String)getExtension(Query.EXTENSION_RESULT_CACHE_TYPE), mconn, ignoreCache, getFetchPlan());
             }
             else
             {
