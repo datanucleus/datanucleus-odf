@@ -359,7 +359,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     String cellValue = cell.getStringValue();
                     if (!StringUtils.isWhitespace(cellValue))
                     {
-                        value = conv.toMemberType(cell.getStringValue());
+                        value = conv.toMemberType(cellValue);
                     }
                 }
                 else if (cellValueType.equals(OfficeValueTypeAttribute.Value.FLOAT.toString()))
