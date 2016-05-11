@@ -85,6 +85,8 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
         set.add(StoreManager.OPTION_ORM);
         set.add(StoreManager.OPTION_ORM_EMBEDDED_PC);
         set.add(StoreManager.OPTION_TXN_ISOLATION_READ_COMMITTED);
+        set.add(StoreManager.OPTION_QUERY_JDOQL_BULK_DELETE);
+        set.add(StoreManager.OPTION_QUERY_JPQL_BULK_DELETE);
         return set;
     }
 
