@@ -38,6 +38,7 @@ import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
+import org.datanucleus.query.QueryUtils;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.schema.table.Column;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
@@ -480,6 +481,19 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                             }
                         }
                     }
+
+                    if (coll instanceof List && mmd.getOrderMetaData() != null && mmd.getOrderMetaData().getOrdering() != null && !mmd.getOrderMetaData().getOrdering().equals("#PK"))
+                    {
+                        // Reorder the collection as per the ordering clause
+                        Collection newColl = QueryUtils.orderCandidates((List)coll, clr.classForName(mmd.getCollection().getElementType()), mmd.getOrderMetaData().getOrdering(), ec, clr);
+                        if (newColl.getClass() != coll.getClass())
+                        {
+                            // Type has changed, so just reuse the input
+                            coll.clear();
+                            coll.addAll(newColl);
+                        }
+                    }
+
                     if (op != null)
                     {
                         coll = (Collection) SCOUtils.wrapSCOField(op, fieldNumber, coll, true);
