@@ -36,6 +36,8 @@ import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
+import org.datanucleus.metadata.FieldRole;
+import org.datanucleus.metadata.JdbcType;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.query.QueryUtils;
@@ -51,6 +53,7 @@ import org.datanucleus.store.types.SCOUtils;
 import org.datanucleus.util.Base64;
 import org.datanucleus.util.NucleusLogger;
 import org.datanucleus.util.StringUtils;
+import org.datanucleus.util.TypeConversionHelper;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
@@ -836,31 +839,21 @@ public class FetchFieldManager extends AbstractFetchFieldManager
         }
         else if (Enum.class.isAssignableFrom(type))
         {
-            boolean useLong = MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType());
-            if (useLong)
+            JdbcType jdbcType = TypeConversionHelper.getJdbcTypeForEnum(mmd, FieldRole.ROLE_FIELD, ec.getClassLoaderResolver());
+            Object datastoreValue = null;
+            if (MetaDataUtils.isJdbcTypeNumeric(jdbcType))
             {
-                Double cellValue = cell.getDoubleValue();
-                if (cellValue != null)
-                {
-                    value = mmd.getType().getEnumConstants()[(int)cellValue.longValue()];
-                }
-                else
-                {
-                    return null;
-                }
+                datastoreValue = cell.getDoubleValue();
             }
             else
             {
-                String cellValue = cell.getStringValue();
-                if (cellValue != null && cellValue.length() > 0)
-                {
-                    value = Enum.valueOf(type, cell.getStringValue());
-                }
-                else
-                {
-                    return null;
-                }
+                datastoreValue = cell.getStringValue();
             }
+            if (datastoreValue == null)
+            {
+                return null;
+            }
+            return TypeConversionHelper.getEnumForStoredValue(mmd, FieldRole.ROLE_FIELD, datastoreValue, ec.getClassLoaderResolver());
         }
         else if (byte[].class == type)
         {

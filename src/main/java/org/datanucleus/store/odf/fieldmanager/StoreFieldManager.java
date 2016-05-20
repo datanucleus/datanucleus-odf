@@ -34,6 +34,7 @@ import org.datanucleus.exceptions.NucleusUserException;
 import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
+import org.datanucleus.metadata.FieldRole;
 import org.datanucleus.metadata.MetaDataUtils;
 import org.datanucleus.metadata.RelationType;
 import org.datanucleus.state.ObjectProvider;
@@ -49,6 +50,7 @@ import org.datanucleus.util.Base64;
 import org.datanucleus.util.ClassUtils;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
+import org.datanucleus.util.TypeConversionHelper;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
@@ -628,15 +630,16 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         else if (value instanceof Enum)
         {
-            if (MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType()))
+            Object datastoreValue = TypeConversionHelper.getStoredValueFromEnum(mmd, FieldRole.ROLE_FIELD, (Enum) value);
+            if (datastoreValue instanceof Number)
             {
                 cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                cell.setDoubleValue((double) ((Enum)value).ordinal());
+                cell.setDoubleValue(((Number)datastoreValue).doubleValue());
             }
             else
             {
                 cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
-                cell.setStringValue(((Enum)value).name());
+                cell.setStringValue((String)datastoreValue);
             }
             return;
         }
