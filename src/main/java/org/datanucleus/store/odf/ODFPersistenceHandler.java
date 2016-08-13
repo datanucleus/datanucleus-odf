@@ -39,6 +39,7 @@ import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.fieldmanager.DeleteFieldManager;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.odf.fieldmanager.StoreFieldManager;
+import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
@@ -170,17 +171,27 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
                 }
 
-                int colIndex = schemaTable.getVersionColumn().getPosition();
-                OdfTableCell cell = row.getCellByIndex(colIndex);
+                OdfTableCell verCell = null;
+                if (vermd.getFieldName() != null)
+                {
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    MemberColumnMapping mapping = schemaTable.getMemberColumnMappingForMember(verMmd);
+                    verCell = row.getCellByIndex(mapping.getColumn(0).getPosition());
+                }
+                else
+                {
+                    int colIndex = schemaTable.getVersionColumn().getPosition();
+                    verCell = row.getCellByIndex(colIndex);
+                }
                 if (nextVersion instanceof Long)
                 {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    cell.setDoubleValue(((Long)nextVersion).doubleValue());
+                    verCell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
+                    verCell.setDoubleValue(((Long)nextVersion).doubleValue());
                 }
                 else if (nextVersion instanceof Timestamp)
                 {
-                    cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    cell.setDoubleValue(new Double(((Timestamp)nextVersion).getTime()));
+                    verCell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
+                    verCell.setDoubleValue(new Double(((Timestamp)nextVersion).getTime()));
                 }
             }
 
@@ -315,8 +326,18 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                         StringUtils.toJVMIDString(op.getObject()), op.getInternalObjectId(), "" + nextVersion));
                 }
 
-                int verCellIndex = schemaTable.getVersionColumn().getPosition();
-                OdfTableCell verCell = row.getCellByIndex(verCellIndex);
+                OdfTableCell verCell = null;
+                if (vermd.getFieldName() != null)
+                {
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    MemberColumnMapping mapping = schemaTable.getMemberColumnMappingForMember(verMmd);
+                    verCell = row.getCellByIndex(mapping.getColumn(0).getPosition());
+                }
+                else
+                {
+                    int verCellIndex = schemaTable.getVersionColumn().getPosition();
+                    verCell = row.getCellByIndex(verCellIndex);
+                }
                 if (nextVersion instanceof Long)
                 {
                     verCell.setDoubleValue(new Double((Long)nextVersion));
