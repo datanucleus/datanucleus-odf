@@ -147,14 +147,14 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
         schemaHandler.createSchemaForClasses(clsNameSet, null, spreadsheet);
     }
 
-    public void createSchema(String schemaName, Properties props)
+    public void createDatabase(String catalogName, String schemaName, Properties props)
     {
-        schemaHandler.createSchema(schemaName, props, null);
+        schemaHandler.createDatabase(catalogName, schemaName, props, null);
     }
 
-    public void deleteSchema(String schemaName, Properties props)
+    public void deleteDatabase(String catalogName, String schemaName, Properties props)
     {
-        schemaHandler.deleteSchema(schemaName, props, null);
+        schemaHandler.deleteDatabase(catalogName, schemaName, props, null);
     }
 
     public void createSchemaForClasses(Set<String> classNames, Properties props)
