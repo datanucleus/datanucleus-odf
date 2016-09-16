@@ -457,8 +457,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     boolean changeDetected = false;
                     if (components != null)
                     {
-                        AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(
-                            ec.getClassLoaderResolver(), ec.getMetaDataManager());
+                        AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(ec.getClassLoaderResolver());
                         for (int i=0;i<components.length;i++)
                         {
                             try
@@ -509,8 +508,8 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                 }
                 else if (Map.class.isAssignableFrom(mmd.getType()))
                 {
-                    AbstractClassMetaData keyCmd = mmd.getMap().getKeyClassMetaData(clr, ec.getMetaDataManager());
-                    AbstractClassMetaData valCmd = mmd.getMap().getValueClassMetaData(clr, ec.getMetaDataManager());
+                    AbstractClassMetaData keyCmd = mmd.getMap().getKeyClassMetaData(clr);
+                    AbstractClassMetaData valCmd = mmd.getMap().getValueClassMetaData(clr);
 
                     Map map;
                     try
@@ -647,7 +646,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     int pos = 0;
                     if (components != null)
                     {
-                        AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(ec.getClassLoaderResolver(), ec.getMetaDataManager());
+                        AbstractClassMetaData elementCmd = mmd.getCollection().getElementClassMetaData(ec.getClassLoaderResolver());
                         array = Array.newInstance(mmd.getType().getComponentType(), components.length);
                         for (int i=0;i<components.length;i++)
                         {
