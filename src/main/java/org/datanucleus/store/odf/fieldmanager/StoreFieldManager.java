@@ -45,7 +45,6 @@ import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.store.types.converters.MultiColumnConverter;
 import org.datanucleus.store.types.converters.TypeConverter;
-import org.datanucleus.store.types.converters.TypeConverterHelper;
 import org.datanucleus.util.Base64;
 import org.datanucleus.util.ClassUtils;
 import org.datanucleus.util.Localiser;
@@ -339,7 +338,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             {
                 // Persist using the provided converter
                 Object datastoreValue = mapping.getTypeConverter().toDatastoreType(value);
-                Class datastoreType = TypeConverterHelper.getDatastoreTypeForTypeConverter(mapping.getTypeConverter(), mmd.getType());
+                Class datastoreType = ec.getTypeManager().getDatastoreTypeForTypeConverter(mapping.getTypeConverter(), mmd.getType());
                 if (mapping.getNumberOfColumns() > 1)
                 {
                     for (int i=0;i<mapping.getNumberOfColumns();i++)
