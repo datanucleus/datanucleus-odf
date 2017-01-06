@@ -37,6 +37,7 @@ import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
+import org.datanucleus.store.schema.table.SurrogateColumnType;
 import org.datanucleus.store.schema.table.Table;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
@@ -151,7 +152,7 @@ public class ODFUtils
         else if (cmd.getIdentityType() == IdentityType.DATASTORE)
         {
             Object key = IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId());
-            int index = schemaTable.getDatastoreIdColumn().getPosition();
+            int index = schemaTable.getSurrogateColumn(SurrogateColumnType.DATASTORE_ID).getPosition();
             List<OdfTableRow> rows = table.getRowList();
             Iterator<OdfTableRow> rowIter = rows.iterator();
             while (rowIter.hasNext())
@@ -390,7 +391,7 @@ public class ODFUtils
                 }
                 else if (acmd.getIdentityType() == IdentityType.DATASTORE)
                 {
-                    int idIndex = schemaTable.getDatastoreIdColumn().getPosition();
+                    int idIndex = schemaTable.getSurrogateColumn(SurrogateColumnType.DATASTORE_ID).getPosition();
                     OdfTableCell idCell = row.getCellByIndex(idIndex);
                     Object idKey = null;
                     if (isOfficeValueTypeConsistent(idCell, OfficeValueTypeAttribute.Value.STRING))

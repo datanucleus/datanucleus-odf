@@ -40,6 +40,7 @@ import org.datanucleus.store.fieldmanager.DeleteFieldManager;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.odf.fieldmanager.StoreFieldManager;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
+import org.datanucleus.store.schema.table.SurrogateColumnType;
 import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
@@ -133,7 +134,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             if (cmd.getIdentityType() == IdentityType.DATASTORE)
             {
-                int colIndex = schemaTable.getDatastoreIdColumn().getPosition();
+                int colIndex = schemaTable.getSurrogateColumn(SurrogateColumnType.DATASTORE_ID).getPosition();
                 OdfTableCell cell = row.getCellByIndex(colIndex);
                 Object idKey = IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId());
                 if (idKey instanceof String)
@@ -180,7 +181,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
                 else
                 {
-                    int colIndex = schemaTable.getVersionColumn().getPosition();
+                    int colIndex = schemaTable.getSurrogateColumn(SurrogateColumnType.VERSION).getPosition();
                     verCell = row.getCellByIndex(colIndex);
                 }
                 if (nextVersion instanceof Long)
@@ -335,7 +336,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
                 else
                 {
-                    int verCellIndex = schemaTable.getVersionColumn().getPosition();
+                    int verCellIndex = schemaTable.getSurrogateColumn(SurrogateColumnType.VERSION).getPosition();
                     verCell = row.getCellByIndex(verCellIndex);
                 }
                 if (nextVersion instanceof Long)

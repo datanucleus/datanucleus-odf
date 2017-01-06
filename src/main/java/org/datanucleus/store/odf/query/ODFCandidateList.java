@@ -36,6 +36,7 @@ import org.datanucleus.store.odf.ODFStoreManager;
 import org.datanucleus.store.odf.ODFUtils;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
 import org.datanucleus.store.query.AbstractCandidateLazyLoadList;
+import org.datanucleus.store.schema.table.SurrogateColumnType;
 import org.datanucleus.store.schema.table.Table;
 import org.odftoolkit.odfdom.doc.OdfSpreadsheetDocument;
 import org.odftoolkit.odfdom.incubator.doc.style.OdfStyle;
@@ -202,7 +203,7 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                             }
                             else if (cmd.getIdentityType() == IdentityType.DATASTORE)
                             {
-                                int idIndex = table.getDatastoreIdColumn().getPosition();
+                                int idIndex = table.getSurrogateColumn(SurrogateColumnType.DATASTORE_ID).getPosition();
                                 OdfTableCell idCell = row.getCellByIndex(idIndex);
                                 Object idKey = null;
                                 if (ODFUtils.isOfficeValueTypeConsistent(idCell, OfficeValueTypeAttribute.Value.STRING))
