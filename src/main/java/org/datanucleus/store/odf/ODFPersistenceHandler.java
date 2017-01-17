@@ -34,7 +34,6 @@ import org.datanucleus.metadata.VersionMetaData;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.AbstractPersistenceHandler;
 import org.datanucleus.store.StoreManager;
-import org.datanucleus.store.VersionHelper;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.fieldmanager.DeleteFieldManager;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
@@ -154,7 +153,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             VersionMetaData vermd = cmd.getVersionMetaDataForClass();
             if (vermd != null)
             {
-                Object nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), null);
+                Object nextVersion = ec.getNextVersion(vermd.getVersionStrategy(), null);
                 if (vermd.getFieldName() != null)
                 {
                     // Version field
@@ -259,7 +258,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                     // Cater for Integer-based versions TODO Generalise this
                     currentVersion = Long.valueOf(((Integer)currentVersion).longValue());
                 }
-                nextVersion = VersionHelper.getNextVersion(vermd.getVersionStrategy(), currentVersion);
+                nextVersion = ec.getNextVersion(vermd.getVersionStrategy(), currentVersion);
 
                 if (vermd.getFieldName() != null)
                 {
