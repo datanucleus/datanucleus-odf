@@ -153,7 +153,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             VersionMetaData vermd = cmd.getVersionMetaDataForClass();
             if (vermd != null)
             {
-                Object nextVersion = ec.getNextVersion(vermd.getVersionStrategy(), null);
+                Object nextVersion = ec.getNextVersion(vermd, null);
                 if (vermd.getFieldName() != null)
                 {
                     // Version field
@@ -258,7 +258,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                     // Cater for Integer-based versions TODO Generalise this
                     currentVersion = Long.valueOf(((Integer)currentVersion).longValue());
                 }
-                nextVersion = ec.getNextVersion(vermd.getVersionStrategy(), currentVersion);
+                nextVersion = ec.getNextVersion(vermd, currentVersion);
 
                 if (vermd.getFieldName() != null)
                 {
