@@ -368,11 +368,11 @@ public class ODFUtils
                 }
 
                 // TODO Change acmd.getAllMemberPositions() to omit nonpersistent fields
+                Object pc = null;
                 if (acmd.getIdentityType() == IdentityType.APPLICATION)
                 {
-                    Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false, // TODO Use "fm" from above
-                        new FetchFieldManager(ec, acmd, row, schemaTable));
-                    results.add(ec.findObject(id, new FieldValues()
+                    Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false, fm);
+                    pc = ec.findObject(id, new FieldValues()
                     {
                         // ObjectProvider calls the fetchFields method
                         public void fetchFields(ObjectProvider op)
@@ -387,7 +387,7 @@ public class ODFUtils
                         {
                             return null;
                         }
-                    }, null, ignoreCache, false));
+                    }, null, ignoreCache, false);
                 }
                 else if (acmd.getIdentityType() == IdentityType.DATASTORE)
                 {
@@ -403,7 +403,8 @@ public class ODFUtils
                         idKey = Long.valueOf(idCell.getDoubleValue().longValue());
                     }
                     Object id = ec.getNucleusContext().getIdentityManager().getDatastoreId(acmd.getFullClassName(), idKey);
-                    results.add(ec.findObject(id, new FieldValues()
+
+                    pc = ec.findObject(id, new FieldValues()
                     {
                         // ObjectProvider calls the fetchFields method
                         public void fetchFields(ObjectProvider op)
@@ -418,27 +419,33 @@ public class ODFUtils
                         {
                             return null;
                         }
-                    }, null, ignoreCache, false));
+                    }, null, ignoreCache, false);
                 }
                 else
                 {
                     Object id = new SCOID(acmd.getFullClassName());
-                    results.add(ec.findObject(id, new FieldValues()
+                    pc = ec.findObject(id, new FieldValues()
                     {
-                        public void fetchFields(ObjectProvider sm)
+                        public void fetchFields(ObjectProvider op)
                         {
-                            sm.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
+                            op.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(op, row, schemaTable));
                         }
-                        public void fetchNonLoadedFields(ObjectProvider sm)
+                        public void fetchNonLoadedFields(ObjectProvider op)
                         {
-                            sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
+                            op.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(op, row, schemaTable));
                         }
                         public FetchPlan getFetchPlanForLoading()
                         {
                             return null;
                         }
-                    }, null, ignoreCache, false));
+                    }, null, ignoreCache, false);
                 }
+                ObjectProvider op = ec.findObjectProvider(pc);
+
+                // Any fields loaded above will not be wrapped since we did not have the ObjectProvider at the point of creating the FetchFieldManager, so wrap them now
+                op.replaceAllLoadedSCOFieldsWithWrappers();
+
+                results.add(pc);
             }
         }
         return results;
