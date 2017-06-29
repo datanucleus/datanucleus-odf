@@ -33,6 +33,7 @@ import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.VersionMetaData;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.AbstractPersistenceHandler;
+import org.datanucleus.store.StoreData;
 import org.datanucleus.store.StoreManager;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.fieldmanager.DeleteFieldManager;
@@ -99,12 +100,13 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             }
 
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
-            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            StoreData sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+            if (sd == null)
             {
-                // Make sure schema exists, using this connection
                 ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
             }
-            Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+            Table schemaTable = sd.getTable();
 
             // Find the sheet (table) appropriate for storing objects of this class TODO Coordinate this with manageClasses above, maybe not needed here
             String sheetName = schemaTable.getName();
@@ -238,12 +240,13 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
-            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            StoreData sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+            if (sd == null)
             {
-                // Make sure schema exists, using this connection
                 ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
             }
-            Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+            Table schemaTable = sd.getTable();
 
             // TODO Add optimistic checks
             int[] updatedFieldNums = fieldNumbers;
@@ -387,7 +390,13 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
-            Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+            StoreData sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+            if (sd == null)
+            {
+                ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+            }
+            Table schemaTable = sd.getTable();
             // TODO Add optimistic checks
 
             // Delete all reachable PC objects (due to dependent-field)
@@ -485,12 +494,13 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             {
                 OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
-                if (!storeMgr.managesClass(cmd.getFullClassName()))
+                StoreData sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+                if (sd == null)
                 {
-                    // Make sure schema exists, using this connection
                     ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                    sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
                 }
-                Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+                Table schemaTable = sd.getTable();
                 long startTime = System.currentTimeMillis();
                 if (NucleusLogger.DATASTORE_RETRIEVE.isDebugEnabled())
                 {
@@ -567,9 +577,9 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
             final AbstractClassMetaData cmd = op.getClassMetaData();
-            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            StoreData sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+            if (sd == null)
             {
-                // Make sure schema exists, using this connection
                 ((ODFStoreManager)storeMgr).manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
             }
             

@@ -30,6 +30,7 @@ import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.FieldValues;
+import org.datanucleus.store.StoreData;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.odf.ODFStoreManager;
@@ -85,13 +86,13 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
             AbstractClassMetaData cmd = cmdIter.next();
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
 
-            if (!storeMgr.managesClass(cmd.getFullClassName()))
+            StoreData sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
+            if (sd == null)
             {
-                // Make sure schema exists, using this connection
                 storeMgr.manageClasses(new String[] {cmd.getFullClassName()}, ec.getClassLoaderResolver(), spreadsheetDoc);
+                sd = storeMgr.getStoreDataForClass(cmd.getFullClassName());
             }
-
-            Table table = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
+            Table table = sd.getTable();
             String sheetName = table.getName();
             OdfTable worksheet = spreadsheetDoc.getTableByName(sheetName);
             int size = 0;
