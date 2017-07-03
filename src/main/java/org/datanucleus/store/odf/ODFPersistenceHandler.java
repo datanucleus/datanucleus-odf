@@ -90,7 +90,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
         AbstractClassMetaData cmd = op.getClassMetaData();
         ExecutionContext ec = op.getExecutionContext();
-        ManagedConnection mconn = storeMgr.getConnection(ec);
+        ManagedConnection mconn = storeMgr.getConnectionManager().getConnection(ec);
         try
         {
             long startTime = System.currentTimeMillis();
@@ -235,7 +235,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
         AbstractClassMetaData cmd = op.getClassMetaData();
         ExecutionContext ec = op.getExecutionContext();
-        ManagedConnection mconn = storeMgr.getConnection(ec);
+        ManagedConnection mconn = storeMgr.getConnectionManager().getConnection(ec);
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
@@ -385,7 +385,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
         AbstractClassMetaData cmd = op.getClassMetaData();
         ExecutionContext ec = op.getExecutionContext();
-        ManagedConnection mconn = storeMgr.getConnection(ec);
+        ManagedConnection mconn = storeMgr.getConnectionManager().getConnection(ec);
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();
@@ -488,7 +488,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
         if (nonpersistableFields == null || nonpersistableFields.size() != fieldNumbers.length)
         {
             ExecutionContext ec = op.getExecutionContext();
-            ManagedConnection mconn = storeMgr.getConnection(ec);
+            ManagedConnection mconn = storeMgr.getConnectionManager().getConnection(ec);
             boolean notFound = false;
             try
             {
@@ -572,7 +572,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     public void locateObject(ObjectProvider op)
     {
         ExecutionContext ec = op.getExecutionContext();
-        ManagedConnection mconn = storeMgr.getConnection(ec);
+        ManagedConnection mconn = storeMgr.getConnectionManager().getConnection(ec);
         try
         {
             OdfSpreadsheetDocument spreadsheetDoc = (OdfSpreadsheetDocument)mconn.getConnection();

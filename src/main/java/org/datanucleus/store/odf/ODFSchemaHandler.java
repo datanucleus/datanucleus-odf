@@ -66,7 +66,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
         {
             if (spreadsheet == null)
             {
-                mconn = storeMgr.getConnection(-1);
+                mconn = storeMgr.getConnectionManager().getConnection(-1);
                 spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
             }
 
@@ -153,7 +153,7 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
         {
             if (spreadsheet == null)
             {
-                mconn = storeMgr.getConnection(-1);
+                mconn = storeMgr.getConnectionManager().getConnection(-1);
                 spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
             }
 

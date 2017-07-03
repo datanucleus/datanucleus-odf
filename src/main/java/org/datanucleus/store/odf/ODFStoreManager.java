@@ -98,7 +98,7 @@ public class ODFStoreManager extends AbstractStoreManager implements SchemaAware
             return;
         }
 
-        ManagedConnection mconn = getConnection(-1);
+        ManagedConnection mconn = connectionMgr.getConnection(-1);
         try
         {
             OdfSpreadsheetDocument spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
