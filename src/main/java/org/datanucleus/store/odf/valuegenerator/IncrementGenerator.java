@@ -39,8 +39,6 @@ import org.odftoolkit.odfdom.doc.table.OdfTableRow;
  */
 public class IncrementGenerator extends AbstractDatastoreGenerator<Long>
 {
-    static final String INCREMENT_COL_NAME = "increment";
-
     /** Key used in the Table to access the increment count */
     private String key;
 
