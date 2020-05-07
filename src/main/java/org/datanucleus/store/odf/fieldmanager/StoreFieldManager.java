@@ -19,6 +19,7 @@ package org.datanucleus.store.odf.fieldmanager;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
@@ -45,7 +46,6 @@ import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
 import org.datanucleus.store.types.converters.MultiColumnConverter;
 import org.datanucleus.store.types.converters.TypeConverter;
-import org.datanucleus.util.Base64;
 import org.datanucleus.util.ClassUtils;
 import org.datanucleus.util.Localiser;
 import org.datanucleus.util.NucleusLogger;
@@ -645,7 +645,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         else if (value.getClass() == byte[].class)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
-            cell.setStringValue(new String(Base64.encode((byte[])value)));
+            cell.setStringValue(Base64.getEncoder().encodeToString((byte[])value));
             return;
         }
         else

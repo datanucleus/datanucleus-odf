@@ -19,6 +19,7 @@ package org.datanucleus.store.odf.fieldmanager;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Currency;
@@ -50,7 +51,6 @@ import org.datanucleus.store.types.converters.TypeConverter;
 import org.datanucleus.store.fieldmanager.AbstractFetchFieldManager;
 import org.datanucleus.store.fieldmanager.FieldManager;
 import org.datanucleus.store.types.SCOUtils;
-import org.datanucleus.util.Base64;
 import org.datanucleus.util.NucleusLogger;
 import org.datanucleus.util.StringUtils;
 import org.datanucleus.util.TypeConversionHelper;
@@ -859,7 +859,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             String cellValue = cell.getStringValue();
             if (cellValue != null && cellValue.length() > 0)
             {
-                value = Base64.decode(cellValue);
+                value = Base64.getDecoder().decode(cellValue);
             }
         }
         else
