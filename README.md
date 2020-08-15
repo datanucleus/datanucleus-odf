@@ -11,7 +11,7 @@ KeyFacts
 --------
 __License__ : Apache 2 licensed  
 __Issue Tracker__ : http://github.com/datanucleus/datanucleus-odf/issues  
-__Javadocs__ : [5.1](http://www.datanucleus.org/javadocs/store.odf/5.1/), [5.0](http://www.datanucleus.org/javadocs/store.odf/5.0/), [4.1](http://www.datanucleus.org/javadocs/store.odf/4.1/), [4.0](http://www.datanucleus.org/javadocs/store.odf/4.0/),  
+__Javadocs__ : [5.2](http://www.datanucleus.org/javadocs/store.odf/5.2/), [5.1](http://www.datanucleus.org/javadocs/store.odf/5.1/), [5.0](http://www.datanucleus.org/javadocs/store.odf/5.0/), [4.1](http://www.datanucleus.org/javadocs/store.odf/4.1/), [4.0](http://www.datanucleus.org/javadocs/store.odf/4.0/),  
 __Download__ : [Maven Central](https://repo1.maven.org/maven2/org/datanucleus/datanucleus-odf)  
 __Dependencies__ : See file [pom.xml](pom.xml)  
 __Support__ : [DataNucleus Support Page](http://www.datanucleus.org/support.html)  
