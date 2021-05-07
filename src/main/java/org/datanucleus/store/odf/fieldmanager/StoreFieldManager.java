@@ -101,7 +101,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-        cell.setDoubleValue(new Double(value));
+        cell.setDoubleValue(Double.valueOf(value));
     }
 
     public void storeCharField(int fieldNumber, char value)
@@ -134,7 +134,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-        cell.setDoubleValue(new Double(value));
+        cell.setDoubleValue(Double.valueOf(value));
     }
 
     public void storeIntField(int fieldNumber, int value)
@@ -145,7 +145,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-        cell.setDoubleValue(new Double(value));
+        cell.setDoubleValue(Double.valueOf(value));
     }
 
     public void storeLongField(int fieldNumber, long value)
@@ -156,7 +156,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-        cell.setDoubleValue(new Double(value));
+        cell.setDoubleValue(Double.valueOf(value));
     }
 
     public void storeShortField(int fieldNumber, short value)
@@ -167,7 +167,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         }
         OdfTableCell cell = row.getCellByIndex(getColumnMapping(fieldNumber).getColumn(0).getPosition());
         cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-        cell.setDoubleValue(new Double(value));
+        cell.setDoubleValue(Double.valueOf(value));
     }
 
     public void storeStringField(int fieldNumber, String value)
@@ -574,7 +574,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         else if (value instanceof Byte)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-            cell.setDoubleValue(new Double((Byte)value));
+            cell.setDoubleValue(Double.valueOf((Byte)value));
             return;
         }
         else if (value instanceof String)
@@ -598,25 +598,25 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         else if (value instanceof Float)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-            cell.setDoubleValue(new Double((Float)value));
+            cell.setDoubleValue(Double.valueOf((Float)value));
             return;
         }
         else if (value instanceof Integer)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-            cell.setDoubleValue(new Double((Integer)value));
+            cell.setDoubleValue(Double.valueOf((Integer)value));
             return;
         }
         else if (value instanceof Long)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-            cell.setDoubleValue(new Double((Long)value));
+            cell.setDoubleValue(Double.valueOf((Long)value));
             return;
         }
         else if (value instanceof Short)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-            cell.setDoubleValue(new Double((Short)value));
+            cell.setDoubleValue(Double.valueOf((Short)value));
             return;
         }
         else if (value instanceof Currency)

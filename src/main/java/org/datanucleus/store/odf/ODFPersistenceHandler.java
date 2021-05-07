@@ -147,7 +147,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 {
                     long idValue = ((Long)IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId())).longValue();
                     cell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    cell.setDoubleValue(new Double(idValue));
+                    cell.setDoubleValue(Double.valueOf(idValue));
                 }
                 cell.getOdfElement().setStyleName("DN_PK");
             }
@@ -193,7 +193,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 else if (nextVersion instanceof Timestamp)
                 {
                     verCell.setValueType(OfficeValueTypeAttribute.Value.FLOAT.toString());
-                    verCell.setDoubleValue(new Double(((Timestamp)nextVersion).getTime()));
+                    verCell.setDoubleValue(Double.valueOf(((Timestamp)nextVersion).getTime()));
                 }
             }
 
@@ -343,15 +343,15 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
                 if (nextVersion instanceof Long)
                 {
-                    verCell.setDoubleValue(new Double((Long)nextVersion));
+                    verCell.setDoubleValue(Double.valueOf((Long)nextVersion));
                 }
                 else if (nextVersion instanceof Integer)
                 {
-                    verCell.setDoubleValue(new Double((Integer)nextVersion));
+                    verCell.setDoubleValue(Double.valueOf((Integer)nextVersion));
                 }
                 else if (nextVersion instanceof Timestamp)
                 {
-                    verCell.setDoubleValue(new Double(((Timestamp)nextVersion).getTime()));
+                    verCell.setDoubleValue(Double.valueOf(((Timestamp)nextVersion).getTime()));
                 }
             }
 
