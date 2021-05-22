@@ -413,7 +413,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             OdfTableRow row = ODFUtils.getTableRowForObjectInSheet(op, spreadsheetDoc, false);
             if (row == null)
             {
-                throw new NucleusObjectNotFoundException("object not found", op.getObject());
+                throw new NucleusObjectNotFoundException("Object not found for id " + IdentityUtils.getPersistableIdentityForId(op.getInternalObjectId()), op.getObject());
             }
 
             // Remove the row node
@@ -553,7 +553,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
 
             if (notFound)
             {
-                throw new NucleusObjectNotFoundException("object not found", op.getObject());
+                throw new NucleusObjectNotFoundException("Object not found for id " + IdentityUtils.getPersistableIdentityForId(op.getInternalObjectId()), op.getObject());
             }
         }
     }
