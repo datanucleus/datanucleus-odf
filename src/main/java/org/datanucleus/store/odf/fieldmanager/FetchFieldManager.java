@@ -45,6 +45,7 @@ import org.datanucleus.state.ObjectProvider;
 import org.datanucleus.store.schema.table.Column;
 import org.datanucleus.store.schema.table.MemberColumnMapping;
 import org.datanucleus.store.schema.table.Table;
+import org.datanucleus.store.types.converters.EnumConversionHelper;
 import org.datanucleus.store.types.converters.MultiColumnConverter;
 import org.datanucleus.store.types.converters.TypeConverter;
 import org.datanucleus.store.fieldmanager.AbstractFetchFieldManager;
@@ -53,7 +54,6 @@ import org.datanucleus.store.query.QueryUtils;
 import org.datanucleus.store.types.SCOUtils;
 import org.datanucleus.util.NucleusLogger;
 import org.datanucleus.util.StringUtils;
-import org.datanucleus.util.TypeConversionHelper;
 import org.odftoolkit.odfdom.doc.table.OdfTableCell;
 import org.odftoolkit.odfdom.doc.table.OdfTableRow;
 import org.odftoolkit.odfdom.dom.attribute.office.OfficeValueTypeAttribute;
@@ -852,7 +852,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             {
                 return null;
             }
-            return TypeConversionHelper.getEnumForStoredValue(mmd, FieldRole.ROLE_FIELD, datastoreValue, ec.getClassLoaderResolver());
+            return EnumConversionHelper.getEnumForStoredValue(mmd, FieldRole.ROLE_FIELD, datastoreValue, ec.getClassLoaderResolver());
         }
         else if (byte[].class == type)
         {
