@@ -55,7 +55,7 @@ public class ODFUtils
      * Convenience method to find the row of an object in the provided sheet.
      * For application-identity does a search for a row with the specified PK field values.
      * For datastore-identity does a search for the row with the datastore column having the specified value
-     * @param op ObjectProvider for the object
+     * @param op StateManager for the object
      * @param spreadsheetDoc The spreadsheet document
      * @param originalValue Whether to use the original value (when available) when using non-durable id.
      * @return The row (or null if not found)
