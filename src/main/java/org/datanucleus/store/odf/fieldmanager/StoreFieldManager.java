@@ -70,9 +70,9 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         this.table = table;
     }
 
-    public StoreFieldManager(ObjectProvider op, OdfTableRow row, boolean insert, Table table)
+    public StoreFieldManager(ObjectProvider sm, OdfTableRow row, boolean insert, Table table)
     {
-        super(op, insert);
+        super(sm, insert);
         this.table = table;
         this.row = row;
     }
@@ -241,9 +241,9 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     return;
                 }
 
-                ObjectProvider embOP = ec.findObjectProviderForEmbedded(value, op, mmd);
-                StoreEmbeddedFieldManager storeEmbFM = new StoreEmbeddedFieldManager(embOP, row, insert, embMmds, table);
-                embOP.provideFields(embMmdPosns, storeEmbFM);
+                ObjectProvider embSM = ec.findObjectProviderForEmbedded(value, op, mmd);
+                StoreEmbeddedFieldManager storeEmbFM = new StoreEmbeddedFieldManager(embSM, row, insert, embMmds, table);
+                embSM.provideFields(embMmdPosns, storeEmbFM);
                 return;
             }
             else if (RelationType.isRelationMultiValued(relationType))

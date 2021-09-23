@@ -55,15 +55,15 @@ public class ODFUtils
      * Convenience method to find the row of an object in the provided sheet.
      * For application-identity does a search for a row with the specified PK field values.
      * For datastore-identity does a search for the row with the datastore column having the specified value
-     * @param op StateManager for the object
+     * @param sm StateManager for the object
      * @param spreadsheetDoc The spreadsheet document
      * @param originalValue Whether to use the original value (when available) when using non-durable id.
      * @return The row (or null if not found)
      */
-    public static OdfTableRow getTableRowForObjectInSheet(ObjectProvider op, OdfSpreadsheetDocument spreadsheetDoc, boolean originalValue)
+    public static OdfTableRow getTableRowForObjectInSheet(ObjectProvider sm, OdfSpreadsheetDocument spreadsheetDoc, boolean originalValue)
     {
-        ExecutionContext ec = op.getExecutionContext();
-        final AbstractClassMetaData cmd = op.getClassMetaData();
+        ExecutionContext ec = sm.getExecutionContext();
+        final AbstractClassMetaData cmd = sm.getClassMetaData();
         Table schemaTable = ec.getStoreManager().getStoreDataForClass(cmd.getFullClassName()).getTable();
         String sheetName = schemaTable.getName();
         OdfTable table = spreadsheetDoc.getTableByName(sheetName);
@@ -81,16 +81,16 @@ public class ODFUtils
             List pkFieldValList = new ArrayList(pkFieldNumbers.length);
             for (int i=0;i<pkFieldNumbers.length;i++)
             {
-                Object fieldValue = op.provideField(pkFieldNumbers[i]);
+                Object fieldValue = sm.provideField(pkFieldNumbers[i]);
                 AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(pkFieldNumbers[i]);
                 RelationType relationType = mmd.getRelationType(clr);
                 if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
                 {
                     // Embedded PC is part of PK (e.g JPA EmbeddedId)
-                    ObjectProvider embOP = ec.findObjectProvider(fieldValue);
-                    if (embOP == null)
+                    ObjectProvider embSM = ec.findObjectProvider(fieldValue);
+                    if (embSM == null)
                     {
-                        embOP = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, op, pkFieldNumbers[i]);
+                        embSM = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, sm, pkFieldNumbers[i]);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
@@ -102,11 +102,11 @@ public class ODFUtils
                         pkFieldColList.add(mapping.getColumn(0).getPosition());
                         if (mapping.getTypeConverter() != null)
                         {
-                            pkFieldValList.add(mapping.getTypeConverter().toDatastoreType(embOP.provideField(j)));
+                            pkFieldValList.add(mapping.getTypeConverter().toDatastoreType(embSM.provideField(j)));
                         }
                         else
                         {
-                            pkFieldValList.add(embOP.provideField(j));
+                            pkFieldValList.add(embSM.provideField(j));
                         }
                     }
                 }
@@ -151,7 +151,7 @@ public class ODFUtils
         }
         else if (cmd.getIdentityType() == IdentityType.DATASTORE)
         {
-            Object key = IdentityUtils.getTargetKeyForDatastoreIdentity(op.getInternalObjectId());
+            Object key = IdentityUtils.getTargetKeyForDatastoreIdentity(sm.getInternalObjectId());
             int index = schemaTable.getSurrogateColumn(SurrogateColumnType.DATASTORE_ID).getPosition();
             List<OdfTableRow> rows = table.getRowList();
             Iterator<OdfTableRow> rowIter = rows.iterator();
@@ -180,27 +180,27 @@ public class ODFUtils
                 Object fieldValue = null;
                 if (originalValue)
                 {
-                    Object oldValue = op.getAssociatedValue(ObjectProvider.ORIGINAL_FIELD_VALUE_KEY_PREFIX + fieldNumbers[i]);
+                    Object oldValue = sm.getAssociatedValue(ObjectProvider.ORIGINAL_FIELD_VALUE_KEY_PREFIX + fieldNumbers[i]);
                     if (oldValue != null)
                     {
                         fieldValue = oldValue;
                     }
                     else
                     {
-                        fieldValue = op.provideField(fieldNumbers[i]);
+                        fieldValue = sm.provideField(fieldNumbers[i]);
                     }
                 }
                 else
                 {
-                    fieldValue = op.provideField(fieldNumbers[i]);
+                    fieldValue = sm.provideField(fieldNumbers[i]);
                 }
                 if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
                 {
                     // Embedded PC is part of PK (e.g JPA EmbeddedId)
-                    ObjectProvider embOP = ec.findObjectProvider(fieldValue);
-                    if (embOP == null)
+                    ObjectProvider embSM = ec.findObjectProvider(fieldValue);
+                    if (embSM == null)
                     {
-                        embOP = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, op, fieldNumbers[i]);
+                        embSM = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, sm, fieldNumbers[i]);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
@@ -209,7 +209,7 @@ public class ODFUtils
                         embMmds.add(mmd);
                         embMmds.add(embCmd.getMetaDataForManagedMemberAtAbsolutePosition(j));
                         fieldColList.add(schemaTable.getMemberColumnMappingForEmbeddedMember(embMmds).getColumn(0).getPosition());
-                        fieldValList.add(embOP.provideField(j));
+                        fieldValList.add(embSM.provideField(j));
                     }
                 }
                 else if (relationType == RelationType.NONE)
@@ -375,13 +375,13 @@ public class ODFUtils
                     pc = ec.findObject(id, new FieldValues()
                     {
                         // ObjectProvider calls the fetchFields method
-                        public void fetchFields(ObjectProvider op)
+                        public void fetchFields(ObjectProvider sm)
                         {
-                            op.replaceFields(acmd.getAllMemberPositions(), fm);
+                            sm.replaceFields(acmd.getAllMemberPositions(), fm);
                         }
-                        public void fetchNonLoadedFields(ObjectProvider op)
+                        public void fetchNonLoadedFields(ObjectProvider sm)
                         {
-                            op.replaceNonLoadedFields(acmd.getAllMemberPositions(), fm);
+                            sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), fm);
                         }
                         public FetchPlan getFetchPlanForLoading()
                         {
@@ -407,13 +407,13 @@ public class ODFUtils
                     pc = ec.findObject(id, new FieldValues()
                     {
                         // ObjectProvider calls the fetchFields method
-                        public void fetchFields(ObjectProvider op)
+                        public void fetchFields(ObjectProvider sm)
                         {
-                            op.replaceFields(acmd.getAllMemberPositions(), fm);
+                            sm.replaceFields(acmd.getAllMemberPositions(), fm);
                         }
-                        public void fetchNonLoadedFields(ObjectProvider op)
+                        public void fetchNonLoadedFields(ObjectProvider sm)
                         {
-                            op.replaceNonLoadedFields(acmd.getAllMemberPositions(), fm);
+                            sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), fm);
                         }
                         public FetchPlan getFetchPlanForLoading()
                         {
@@ -426,13 +426,13 @@ public class ODFUtils
                     Object id = new SCOID(acmd.getFullClassName());
                     pc = ec.findObject(id, new FieldValues()
                     {
-                        public void fetchFields(ObjectProvider op)
+                        public void fetchFields(ObjectProvider sm)
                         {
-                            op.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(op, row, schemaTable));
+                            sm.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
                         }
-                        public void fetchNonLoadedFields(ObjectProvider op)
+                        public void fetchNonLoadedFields(ObjectProvider sm)
                         {
-                            op.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(op, row, schemaTable));
+                            sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
                         }
                         public FetchPlan getFetchPlanForLoading()
                         {
@@ -440,10 +440,9 @@ public class ODFUtils
                         }
                     }, null, ignoreCache, false);
                 }
-                ObjectProvider op = ec.findObjectProvider(pc);
 
                 // Any fields loaded above will not be wrapped since we did not have the ObjectProvider at the point of creating the FetchFieldManager, so wrap them now
-                op.replaceAllLoadedSCOFieldsWithWrappers();
+                ec.findObjectProvider(pc).replaceAllLoadedSCOFieldsWithWrappers();
 
                 results.add(pc);
             }
