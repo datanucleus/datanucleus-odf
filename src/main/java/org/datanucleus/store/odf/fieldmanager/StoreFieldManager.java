@@ -183,9 +183,9 @@ public class StoreFieldManager extends AbstractStoreFieldManager
 
     public void storeObjectField(int fieldNumber, Object value)
     {
-        ExecutionContext ec = op.getExecutionContext();
+        ExecutionContext ec = sm.getExecutionContext();
         ClassLoaderResolver clr = ec.getClassLoaderResolver();
-        AbstractMemberMetaData mmd = op.getClassMetaData().getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
+        AbstractMemberMetaData mmd = sm.getClassMetaData().getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
         if (!isStorable(mmd))
         {
             return;
@@ -241,7 +241,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     return;
                 }
 
-                ObjectProvider embSM = ec.findObjectProviderForEmbedded(value, op, mmd);
+                ObjectProvider embSM = ec.findObjectProviderForEmbedded(value, sm, mmd);
                 StoreEmbeddedFieldManager storeEmbFM = new StoreEmbeddedFieldManager(embSM, row, insert, embMmds, table);
                 embSM.provideFields(embMmdPosns, storeEmbFM);
                 return;
@@ -419,8 +419,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 return;
             }
 
-            Object valuePC = op.getExecutionContext().persistObjectInternal(value, op, fieldNumber, -1);
-            Object valueId = op.getExecutionContext().getApiAdapter().getIdForObject(valuePC);
+            Object valuePC = sm.getExecutionContext().persistObjectInternal(value, sm, fieldNumber, -1);
+            Object valueId = sm.getExecutionContext().getApiAdapter().getIdForObject(valuePC);
             cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
             cell.setStringValue("[" + IdentityUtils.getPersistableIdentityForId(valueId) + "]");
             return;
@@ -462,8 +462,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 while (collIter.hasNext())
                 {
                     Object element = collIter.next();
-                    Object elementPC = op.getExecutionContext().persistObjectInternal(element, op, fieldNumber, -1);
-                    Object elementID = op.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
+                    Object elementPC = sm.getExecutionContext().persistObjectInternal(element, sm, fieldNumber, -1);
+                    Object elementID = sm.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
                     cellValue.append(IdentityUtils.getPersistableIdentityForId(elementID));
                     if (collIter.hasNext())
                     {
@@ -489,8 +489,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     cellValue.append("[");
                     if (keyCmd != null)
                     {
-                        Object keyPC = op.getExecutionContext().persistObjectInternal(entry.getKey(), op, fieldNumber, -1);
-                        Object keyID = op.getExecutionContext().getApiAdapter().getIdForObject(keyPC);
+                        Object keyPC = sm.getExecutionContext().persistObjectInternal(entry.getKey(), sm, fieldNumber, -1);
+                        Object keyID = sm.getExecutionContext().getApiAdapter().getIdForObject(keyPC);
                         cellValue.append(IdentityUtils.getPersistableIdentityForId(keyID));
                     }
                     else
@@ -500,8 +500,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     cellValue.append("],[");
                     if (valCmd != null)
                     {
-                        Object valPC = op.getExecutionContext().persistObjectInternal(entry.getValue(), op, fieldNumber, -1);
-                        Object valID = op.getExecutionContext().getApiAdapter().getIdForObject(valPC);
+                        Object valPC = sm.getExecutionContext().persistObjectInternal(entry.getValue(), sm, fieldNumber, -1);
+                        Object valID = sm.getExecutionContext().getApiAdapter().getIdForObject(valPC);
                         cellValue.append(IdentityUtils.getPersistableIdentityForId(valID));
                     }
                     else
@@ -525,8 +525,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 for (int i=0;i<Array.getLength(value);i++)
                 {
                     Object element = Array.get(value, i);
-                    Object elementPC = op.getExecutionContext().persistObjectInternal(element, op, fieldNumber, -1);
-                    Object elementID = op.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
+                    Object elementPC = sm.getExecutionContext().persistObjectInternal(element, sm, fieldNumber, -1);
+                    Object elementID = sm.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
                     cellValue.append(IdentityUtils.getPersistableIdentityForId(elementID));
                     if (i < (Array.getLength(value)-1))
                     {
@@ -623,7 +623,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.CURRENCY.toString());
             TypeConverter conv = 
-                    op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
+                    sm.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
             cell.setStringValue((String)conv.toDatastoreType(value));
             return;
         }
@@ -653,7 +653,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             // See if we can persist it as a Long/String using built-in converters
             boolean useLong = MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType());
 
-            TypeConverter longConv = op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
+            TypeConverter longConv = sm.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
             if (useLong)
             {
                 if (longConv != null)
@@ -665,7 +665,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             }
             else
             {
-                TypeConverter strConv = op.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
+                TypeConverter strConv = sm.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
                 if (strConv != null)
                 {
                     cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
