@@ -32,7 +32,7 @@ import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.RelationType;
-import org.datanucleus.state.ObjectProvider;
+import org.datanucleus.state.DNStateManager;
 import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.connection.ManagedConnection;
 import org.datanucleus.store.odf.fieldmanager.FetchFieldManager;
@@ -60,7 +60,7 @@ public class ODFUtils
      * @param originalValue Whether to use the original value (when available) when using non-durable id.
      * @return The row (or null if not found)
      */
-    public static OdfTableRow getTableRowForObjectInSheet(ObjectProvider sm, OdfSpreadsheetDocument spreadsheetDoc, boolean originalValue)
+    public static OdfTableRow getTableRowForObjectInSheet(DNStateManager sm, OdfSpreadsheetDocument spreadsheetDoc, boolean originalValue)
     {
         ExecutionContext ec = sm.getExecutionContext();
         final AbstractClassMetaData cmd = sm.getClassMetaData();
@@ -87,10 +87,10 @@ public class ODFUtils
                 if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
                 {
                     // Embedded PC is part of PK (e.g JPA EmbeddedId)
-                    ObjectProvider embSM = ec.findObjectProvider(fieldValue);
+                    DNStateManager embSM = ec.findStateManager(fieldValue);
                     if (embSM == null)
                     {
-                        embSM = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, sm, pkFieldNumbers[i]);
+                        embSM = ec.getNucleusContext().getStateManagerFactory().newForEmbedded(ec, fieldValue, false, sm, pkFieldNumbers[i]);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
@@ -180,7 +180,7 @@ public class ODFUtils
                 Object fieldValue = null;
                 if (originalValue)
                 {
-                    Object oldValue = sm.getAssociatedValue(ObjectProvider.ORIGINAL_FIELD_VALUE_KEY_PREFIX + fieldNumbers[i]);
+                    Object oldValue = sm.getAssociatedValue(DNStateManager.ORIGINAL_FIELD_VALUE_KEY_PREFIX + fieldNumbers[i]);
                     if (oldValue != null)
                     {
                         fieldValue = oldValue;
@@ -197,10 +197,10 @@ public class ODFUtils
                 if (RelationType.isRelationSingleValued(relationType) && mmd.isEmbedded())
                 {
                     // Embedded PC is part of PK (e.g JPA EmbeddedId)
-                    ObjectProvider embSM = ec.findObjectProvider(fieldValue);
+                    DNStateManager embSM = ec.findStateManager(fieldValue);
                     if (embSM == null)
                     {
-                        embSM = ec.getNucleusContext().getObjectProviderFactory().newForEmbedded(ec, fieldValue, false, sm, fieldNumbers[i]);
+                        embSM = ec.getNucleusContext().getStateManagerFactory().newForEmbedded(ec, fieldValue, false, sm, fieldNumbers[i]);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
@@ -342,7 +342,7 @@ public class ODFUtils
      * @param spreadsheetDoc Spreadsheet
      * @param acmd MetaData for the class
      * @param ignoreCache Whether to ignore the cache
-     * @return List of objects (connected to ObjectProviders as required)
+     * @return List of objects (connected to StateManagers as required)
      */
     private static List getObjectsOfCandidateType(ExecutionContext ec, OdfSpreadsheetDocument spreadsheetDoc, final AbstractClassMetaData acmd, boolean ignoreCache)
     {
@@ -374,12 +374,12 @@ public class ODFUtils
                     Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, acmd, null, false, fm);
                     pc = ec.findObject(id, new FieldValues()
                     {
-                        // ObjectProvider calls the fetchFields method
-                        public void fetchFields(ObjectProvider sm)
+                        // StateManager calls the fetchFields method
+                        public void fetchFields(DNStateManager sm)
                         {
                             sm.replaceFields(acmd.getAllMemberPositions(), fm);
                         }
-                        public void fetchNonLoadedFields(ObjectProvider sm)
+                        public void fetchNonLoadedFields(DNStateManager sm)
                         {
                             sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), fm);
                         }
@@ -406,12 +406,12 @@ public class ODFUtils
 
                     pc = ec.findObject(id, new FieldValues()
                     {
-                        // ObjectProvider calls the fetchFields method
-                        public void fetchFields(ObjectProvider sm)
+                        // StateManager calls the fetchFields method
+                        public void fetchFields(DNStateManager sm)
                         {
                             sm.replaceFields(acmd.getAllMemberPositions(), fm);
                         }
-                        public void fetchNonLoadedFields(ObjectProvider sm)
+                        public void fetchNonLoadedFields(DNStateManager sm)
                         {
                             sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), fm);
                         }
@@ -426,11 +426,11 @@ public class ODFUtils
                     Object id = new SCOID(acmd.getFullClassName());
                     pc = ec.findObject(id, new FieldValues()
                     {
-                        public void fetchFields(ObjectProvider sm)
+                        public void fetchFields(DNStateManager sm)
                         {
                             sm.replaceFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
                         }
-                        public void fetchNonLoadedFields(ObjectProvider sm)
+                        public void fetchNonLoadedFields(DNStateManager sm)
                         {
                             sm.replaceNonLoadedFields(acmd.getAllMemberPositions(), new FetchFieldManager(sm, row, schemaTable));
                         }
@@ -442,7 +442,7 @@ public class ODFUtils
                 }
 
                 // Any fields loaded above will not be wrapped since we did not have StateManager at the point of creating the FetchFieldManager, so wrap them now
-                ec.findObjectProvider(pc).replaceAllLoadedSCOFieldsWithWrappers();
+                ec.findStateManager(pc).replaceAllLoadedSCOFieldsWithWrappers();
 
                 results.add(pc);
             }

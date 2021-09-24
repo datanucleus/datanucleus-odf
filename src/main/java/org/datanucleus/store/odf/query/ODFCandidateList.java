@@ -28,7 +28,7 @@ import org.datanucleus.identity.IdentityUtils;
 import org.datanucleus.identity.SCOID;
 import org.datanucleus.metadata.AbstractClassMetaData;
 import org.datanucleus.metadata.IdentityType;
-import org.datanucleus.state.ObjectProvider;
+import org.datanucleus.state.DNStateManager;
 import org.datanucleus.store.FieldValues;
 import org.datanucleus.store.StoreData;
 import org.datanucleus.store.connection.ManagedConnection;
@@ -188,11 +188,11 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 Object id = IdentityUtils.getApplicationIdentityForResultSetRow(ec, cmd, null, false, fm);
                                 return ec.findObject(id, new FieldValues()
                                 {
-                                    public void fetchFields(ObjectProvider sm)
+                                    public void fetchFields(DNStateManager sm)
                                     {
                                         sm.replaceFields(fpFieldNums, fm);
                                     }
-                                    public void fetchNonLoadedFields(ObjectProvider sm)
+                                    public void fetchNonLoadedFields(DNStateManager sm)
                                     {
                                         sm.replaceNonLoadedFields(fpFieldNums, fm);
                                     }
@@ -218,11 +218,11 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 Object id = ec.getNucleusContext().getIdentityManager().getDatastoreId(cmd.getFullClassName(), idKey);
                                 return ec.findObject(id, new FieldValues()
                                 {
-                                    public void fetchFields(ObjectProvider sm)
+                                    public void fetchFields(DNStateManager sm)
                                     {
                                         sm.replaceFields(fpFieldNums, fm);
                                     }
-                                    public void fetchNonLoadedFields(ObjectProvider sm)
+                                    public void fetchNonLoadedFields(DNStateManager sm)
                                     {
                                         sm.replaceNonLoadedFields(fpFieldNums, fm);
                                     }
@@ -237,11 +237,11 @@ public class ODFCandidateList extends AbstractCandidateLazyLoadList
                                 Object id = new SCOID(cmd.getFullClassName());
                                 return ec.findObject(id, new FieldValues()
                                 {
-                                    public void fetchFields(ObjectProvider sm)
+                                    public void fetchFields(DNStateManager sm)
                                     {
                                         sm.replaceFields(fpFieldNums, fm);
                                     }
-                                    public void fetchNonLoadedFields(ObjectProvider sm)
+                                    public void fetchNonLoadedFields(DNStateManager sm)
                                     {
                                         sm.replaceNonLoadedFields(fpFieldNums, fm);
                                     }

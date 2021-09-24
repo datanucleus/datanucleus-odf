@@ -31,7 +31,7 @@ import org.datanucleus.metadata.AbstractMemberMetaData;
 import org.datanucleus.metadata.FieldPersistenceModifier;
 import org.datanucleus.metadata.IdentityType;
 import org.datanucleus.metadata.VersionMetaData;
-import org.datanucleus.state.ObjectProvider;
+import org.datanucleus.state.DNStateManager;
 import org.datanucleus.store.AbstractPersistenceHandler;
 import org.datanucleus.store.StoreData;
 import org.datanucleus.store.StoreManager;
@@ -79,7 +79,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     }
 
     @Override
-    public void insertObject(ObjectProvider sm)
+    public void insertObject(DNStateManager sm)
     {
         // Check if read-only so update not permitted
         assertReadOnlyForUpdateOfObject(sm);
@@ -222,7 +222,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     }
 
     @Override
-    public void updateObject(ObjectProvider sm, int[] fieldNumbers)
+    public void updateObject(DNStateManager sm, int[] fieldNumbers)
     {
         // Check if read-only so update not permitted
         assertReadOnlyForUpdateOfObject(sm);
@@ -370,7 +370,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     }
 
     @Override
-    public void deleteObject(ObjectProvider sm)
+    public void deleteObject(DNStateManager sm)
     {
         // Check if read-only so update not permitted
         assertReadOnlyForUpdateOfObject(sm);
@@ -432,7 +432,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     }
 
     @Override
-    public void fetchObject(ObjectProvider sm, int[] fieldNumbers)
+    public void fetchObject(DNStateManager sm, int[] fieldNumbers)
     {
         AbstractClassMetaData cmd = sm.getClassMetaData();
         if (NucleusLogger.PERSISTENCE.isDebugEnabled())
@@ -555,7 +555,7 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
     }
 
     @Override
-    public void locateObject(ObjectProvider sm)
+    public void locateObject(DNStateManager sm)
     {
         ExecutionContext ec = sm.getExecutionContext();
         ManagedConnection mconn = storeMgr.getConnectionManager().getConnection(ec);
