@@ -183,9 +183,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
 
     public void storeObjectField(int fieldNumber, Object value)
     {
-        ExecutionContext ec = sm.getExecutionContext();
         ClassLoaderResolver clr = ec.getClassLoaderResolver();
-        AbstractMemberMetaData mmd = sm.getClassMetaData().getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
+        AbstractMemberMetaData mmd = cmd.getMetaDataForManagedMemberAtAbsolutePosition(fieldNumber);
         if (!isStorable(mmd))
         {
             return;
@@ -419,8 +418,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 return;
             }
 
-            Object valuePC = sm.getExecutionContext().persistObjectInternal(value, sm, fieldNumber, -1);
-            Object valueId = sm.getExecutionContext().getApiAdapter().getIdForObject(valuePC);
+            Object valuePC = ec.persistObjectInternal(value, sm, fieldNumber, -1);
+            Object valueId = ec.getApiAdapter().getIdForObject(valuePC);
             cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
             cell.setStringValue("[" + IdentityUtils.getPersistableIdentityForId(valueId) + "]");
             return;
@@ -462,8 +461,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 while (collIter.hasNext())
                 {
                     Object element = collIter.next();
-                    Object elementPC = sm.getExecutionContext().persistObjectInternal(element, sm, fieldNumber, -1);
-                    Object elementID = sm.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
+                    Object elementPC = ec.persistObjectInternal(element, sm, fieldNumber, -1);
+                    Object elementID = ec.getApiAdapter().getIdForObject(elementPC);
                     cellValue.append(IdentityUtils.getPersistableIdentityForId(elementID));
                     if (collIter.hasNext())
                     {
@@ -489,8 +488,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     cellValue.append("[");
                     if (keyCmd != null)
                     {
-                        Object keyPC = sm.getExecutionContext().persistObjectInternal(entry.getKey(), sm, fieldNumber, -1);
-                        Object keyID = sm.getExecutionContext().getApiAdapter().getIdForObject(keyPC);
+                        Object keyPC = ec.persistObjectInternal(entry.getKey(), sm, fieldNumber, -1);
+                        Object keyID = ec.getApiAdapter().getIdForObject(keyPC);
                         cellValue.append(IdentityUtils.getPersistableIdentityForId(keyID));
                     }
                     else
@@ -500,8 +499,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                     cellValue.append("],[");
                     if (valCmd != null)
                     {
-                        Object valPC = sm.getExecutionContext().persistObjectInternal(entry.getValue(), sm, fieldNumber, -1);
-                        Object valID = sm.getExecutionContext().getApiAdapter().getIdForObject(valPC);
+                        Object valPC = ec.persistObjectInternal(entry.getValue(), sm, fieldNumber, -1);
+                        Object valID = ec.getApiAdapter().getIdForObject(valPC);
                         cellValue.append(IdentityUtils.getPersistableIdentityForId(valID));
                     }
                     else
@@ -525,8 +524,8 @@ public class StoreFieldManager extends AbstractStoreFieldManager
                 for (int i=0;i<Array.getLength(value);i++)
                 {
                     Object element = Array.get(value, i);
-                    Object elementPC = sm.getExecutionContext().persistObjectInternal(element, sm, fieldNumber, -1);
-                    Object elementID = sm.getExecutionContext().getApiAdapter().getIdForObject(elementPC);
+                    Object elementPC = ec.persistObjectInternal(element, sm, fieldNumber, -1);
+                    Object elementID = ec.getApiAdapter().getIdForObject(elementPC);
                     cellValue.append(IdentityUtils.getPersistableIdentityForId(elementID));
                     if (i < (Array.getLength(value)-1))
                     {
@@ -622,8 +621,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
         else if (value instanceof Currency)
         {
             cell.setValueType(OfficeValueTypeAttribute.Value.CURRENCY.toString());
-            TypeConverter conv = 
-                    sm.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
+            TypeConverter conv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
             cell.setStringValue((String)conv.toDatastoreType(value));
             return;
         }
@@ -653,7 +651,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             // See if we can persist it as a Long/String using built-in converters
             boolean useLong = MetaDataUtils.isJdbcTypeNumeric(col.getJdbcType());
 
-            TypeConverter longConv = sm.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
+            TypeConverter longConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), Long.class);
             if (useLong)
             {
                 if (longConv != null)
@@ -665,7 +663,7 @@ public class StoreFieldManager extends AbstractStoreFieldManager
             }
             else
             {
-                TypeConverter strConv = sm.getExecutionContext().getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
+                TypeConverter strConv = ec.getNucleusContext().getTypeManager().getTypeConverterForType(mmd.getType(), String.class);
                 if (strConv != null)
                 {
                     cell.setValueType(OfficeValueTypeAttribute.Value.STRING.toString());
