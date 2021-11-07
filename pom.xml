@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>datanucleus-odf</artifactId>
-	<version>6.0.0-m3-SNAPSHOT</version>
+	<version>6.0.0-m3</version>
 
     <name>DataNucleus ODF plugin</name>
     <description>
