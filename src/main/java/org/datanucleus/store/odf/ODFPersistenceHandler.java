@@ -152,10 +152,10 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
             if (vermd != null)
             {
                 Object nextVersion = ec.getLockManager().getNextVersion(vermd, null);
-                if (vermd.getFieldName() != null)
+                if (vermd.getMemberName() != null)
                 {
                     // Version field
-                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getMemberName());
                     if (verMmd.getType() == Integer.class || verMmd.getType() == int.class)
                     {
                         // Cater for Integer-based versions TODO Generalise this
@@ -170,9 +170,9 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
 
                 OdfTableCell verCell = null;
-                if (vermd.getFieldName() != null)
+                if (vermd.getMemberName() != null)
                 {
-                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getMemberName());
                     MemberColumnMapping mapping = schemaTable.getMemberColumnMappingForMember(verMmd);
                     verCell = row.getCellByIndex(mapping.getColumn(0).getPosition());
                 }
@@ -257,10 +257,10 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
                 nextVersion = ec.getLockManager().getNextVersion(vermd, currentVersion);
 
-                if (vermd.getFieldName() != null)
+                if (vermd.getMemberName() != null)
                 {
                     // Version field
-                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getMemberName());
 
                     if (verMmd.getType() == Integer.class || verMmd.getType() == int.class)
                     {
@@ -324,9 +324,9 @@ public class ODFPersistenceHandler extends AbstractPersistenceHandler
                 }
 
                 OdfTableCell verCell = null;
-                if (vermd.getFieldName() != null)
+                if (vermd.getMemberName() != null)
                 {
-                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getFieldName());
+                    AbstractMemberMetaData verMmd = cmd.getMetaDataForMember(vermd.getMemberName());
                     MemberColumnMapping mapping = schemaTable.getMemberColumnMappingForMember(verMmd);
                     verCell = row.getCellByIndex(mapping.getColumn(0).getPosition());
                 }
