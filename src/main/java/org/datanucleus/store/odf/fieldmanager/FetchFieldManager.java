@@ -236,12 +236,12 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             }
         }
 
-        return fetchObjectFieldInternal(fieldNumber, mmd, clr, relationType);
+        return fetchObjectFieldInternal(mmd, clr, relationType);
     }
 
-    protected Object fetchObjectFieldInternal(int fieldNumber, AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
+    protected Object fetchObjectFieldInternal(AbstractMemberMetaData mmd, ClassLoaderResolver clr, RelationType relationType)
     {
-        MemberColumnMapping mapping = getColumnMapping(fieldNumber);
+        MemberColumnMapping mapping = getColumnMapping(mmd.getAbsoluteFieldNumber());
 
         boolean optional = false;
         if (Optional.class.isAssignableFrom(mmd.getType()))
@@ -346,7 +346,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     Object memberValue = conv.toMemberType(valuesArr);
                     if (sm != null && memberValue != null)
                     {
-                        memberValue = SCOUtils.wrapSCOField(sm, fieldNumber, memberValue, true);
+                        memberValue = SCOUtils.wrapSCOField(sm, mmd.getAbsoluteFieldNumber(), memberValue, true);
                     }
                     return memberValue;
                 }
@@ -386,7 +386,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
             Object value = getMemberValueFromCell(mapping, type, 0, cell);
             value = optional ? (value != null ? Optional.of(value) : Optional.empty()) : value;
 
-            return (sm != null && value != null) ? SCOUtils.wrapSCOField(sm, fieldNumber, value, true) : value;
+            return (sm != null && value != null) ? SCOUtils.wrapSCOField(sm, mmd.getAbsoluteFieldNumber(), value, true) : value;
         }
         else if (RelationType.isRelationSingleValued(relationType))
         {
@@ -498,7 +498,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
 
                     if (sm != null)
                     {
-                        coll = (Collection) SCOUtils.wrapSCOField(sm, fieldNumber, coll, true);
+                        coll = (Collection) SCOUtils.wrapSCOField(sm, mmd.getAbsoluteFieldNumber(), coll, true);
                         if (changeDetected)
                         {
                             sm.makeDirty(mmd.getAbsoluteFieldNumber());
@@ -631,7 +631,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                     }
                     if (sm != null)
                     {
-                        map = (Map) SCOUtils.wrapSCOField(sm, fieldNumber, map, true);
+                        map = (Map) SCOUtils.wrapSCOField(sm, mmd.getAbsoluteFieldNumber(), map, true);
                         if (changeDetected)
                         {
                             sm.makeDirty(mmd.getAbsoluteFieldNumber());
@@ -691,7 +691,7 @@ public class FetchFieldManager extends AbstractFetchFieldManager
                         }
                         if (sm != null)
                         {
-                            array = SCOUtils.wrapSCOField(sm, fieldNumber, array, true);
+                            array = SCOUtils.wrapSCOField(sm, mmd.getAbsoluteFieldNumber(), array, true);
                             if (changeDetected)
                             {
                                 sm.makeDirty(mmd.getAbsoluteFieldNumber());
