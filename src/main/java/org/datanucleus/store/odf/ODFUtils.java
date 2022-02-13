@@ -90,7 +90,7 @@ public class ODFUtils
                     DNStateManager embSM = ec.findStateManager(fieldValue);
                     if (embSM == null)
                     {
-                        embSM = ec.getNucleusContext().getStateManagerFactory().newForEmbedded(ec, fieldValue, false, sm, pkFieldNumbers[i]);
+                        embSM = ec.getNucleusContext().getStateManagerFactory().newForEmbedded(ec, fieldValue, false, sm, pkFieldNumbers[i], null);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
@@ -200,7 +200,7 @@ public class ODFUtils
                     DNStateManager embSM = ec.findStateManager(fieldValue);
                     if (embSM == null)
                     {
-                        embSM = ec.getNucleusContext().getStateManagerFactory().newForEmbedded(ec, fieldValue, false, sm, fieldNumbers[i]);
+                        embSM = ec.getNucleusContext().getStateManagerFactory().newForEmbedded(ec, fieldValue, false, sm, fieldNumbers[i], null);
                     }
                     AbstractClassMetaData embCmd = ec.getMetaDataManager().getMetaDataForClass(mmd.getType(), clr);
                     for (int j=0;j<embCmd.getNoOfManagedMembers();j++)
