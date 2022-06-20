@@ -17,7 +17,6 @@ Contributors:
 **********************************************************************/
 package org.datanucleus.store.odf;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -70,11 +69,9 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
             }
 
-            Iterator<String> classIter = classNames.iterator();
             ClassLoaderResolver clr = storeMgr.getNucleusContext().getClassLoaderResolver(null);
-            while (classIter.hasNext())
+            for (String className : classNames)
             {
-                String className = classIter.next();
                 AbstractClassMetaData cmd = storeMgr.getMetaDataManager().getMetaDataForClass(className, clr);
                 if (cmd != null)
                 {
@@ -157,11 +154,9 @@ public class ODFSchemaHandler extends AbstractStoreSchemaHandler
                 spreadsheet = (OdfSpreadsheetDocument)mconn.getConnection();
             }
 
-            Iterator<String> classIter = classNames.iterator();
             ClassLoaderResolver clr = storeMgr.getNucleusContext().getClassLoaderResolver(null);
-            while (classIter.hasNext())
+            for (String className : classNames)
             {
-                String className = classIter.next();
                 AbstractClassMetaData cmd = storeMgr.getMetaDataManager().getMetaDataForClass(className, clr);
                 if (cmd != null)
                 {
